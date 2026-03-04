@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 import '../models/user.dart';
-import '../services/auth_service.dart';
+import '../services/api_service.dart';
 
 class AuthProvider with ChangeNotifier {
-  final AuthService _authService = AuthService();
+  final ApiService _apiService = ApiService();
   User? _user;
   bool _isLoading = false;
   String _error = '';
@@ -19,14 +21,24 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final user = await _authService.login(email, password);
-      if (user != null) {
-        _user = user;
+      final response = await _apiService.login(email, password);
+      
+      if (response['success']) {
+        final token = response['token'];
+        final userData = response['user'];
+        
+        // Save to local storage
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('auth_token', token);
+        await prefs.setString('user_data', jsonEncode(userData));
+        
+        _apiService.setToken(token);
+        _user = User.fromJson(userData);
         _isLoading = false;
         notifyListeners();
         return true;
       } else {
-        _error = 'Invalid credentials';
+        _error = response['message'] ?? 'Invalid credentials';
       }
     } catch (e) {
       _error = 'Login failed. Please try again.';
@@ -38,13 +50,38 @@ class AuthProvider with ChangeNotifier {
   }
 
   Future<void> logout() async {
-    await _authService.logout();
-    _user = null;
+    _isLoading = true;
+    notifyListeners();
+    
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('auth_token');
+      await prefs.remove('user_data');
+      
+      _user = null;
+    } catch (e) {
+      _error = 'Logout failed';
+    }
+    
+    _isLoading = false;
     notifyListeners();
   }
 
   Future<void> checkAuthStatus() async {
-    _user = await _authService.getCurrentUser();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+      final userJson = prefs.getString('user_data');
+      
+      if (token != null && userJson != null) {
+        _apiService.setToken(token);
+        final userData = jsonDecode(userJson);
+        _user = User.fromJson(userData);
+      }
+    } catch (e) {
+      _error = 'Failed to check auth status';
+    }
+    
     notifyListeners();
   }
 

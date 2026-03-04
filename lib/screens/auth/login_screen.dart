@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../../models/user.dart';
 import '../../providers/auth_provider.dart';
 import '../outlet/outlet_home_screen.dart';
-import '../driver/driver_dashboard_screen.dart';
+import '../driver/new_driver_dashboard.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -41,7 +41,7 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       } else {
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const DriverDashboardScreen()),
+          MaterialPageRoute(builder: (_) => const NewDriverDashboard()),
         );
       }
     }
