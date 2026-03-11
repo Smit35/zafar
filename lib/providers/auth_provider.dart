@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import '../models/user.dart';
+import '../models/driver.dart';
 import '../services/api_service.dart';
 
 class AuthProvider with ChangeNotifier {
@@ -25,15 +26,21 @@ class AuthProvider with ChangeNotifier {
       
       if (response['success']) {
         final token = response['token'];
-        final userData = response['user'];
+        final driver = response['driver'] as Driver;
         
         // Save to local storage
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('auth_token', token);
-        await prefs.setString('user_data', jsonEncode(userData));
+        await prefs.setString('user_data', jsonEncode(driver.toJson()));
         
         _apiService.setToken(token);
-        _user = User.fromJson(userData);
+        _user = User(
+          id: driver.id.toString(),
+          email: driver.email,
+          name: driver.name,
+          phone: driver.contact,
+          type: UserType.driver,
+        );
         _isLoading = false;
         notifyListeners();
         return true;

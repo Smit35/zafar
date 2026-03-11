@@ -119,49 +119,121 @@ class OrderProvider with ChangeNotifier {
   Future<void> refreshOrders() async {
     _setLoading(true);
     try {
-      // In a real app, you would fetch from API
-      // final active = await _apiService.getDriverOrders('active');
-      // final completed = await _apiService.getDriverOrders('completed');
-      // _activeOrders = active;
-      // _completedOrders = completed;
+      // Fetch today's orders and active orders
+      final todayResult = await _apiService.getDriverOrders(tab: 'today');
+      final completedResult = await _apiService.getDriverOrders(tab: 'completed');
       
-      // For demo, just simulate loading
-      await Future.delayed(const Duration(seconds: 1));
-      _setError('');
+      if (todayResult['success'] == true && completedResult['success'] == true) {
+        // Filter today's orders into active and assigned
+        final todayOrders = todayResult['orders'] as List<Order>;
+        _activeOrders = todayOrders.where((order) => 
+          order.status == OrderStatus.assigned || order.status == OrderStatus.active
+        ).toList();
+        
+        _completedOrders = completedResult['orders'] as List<Order>;
+        _setError('');
+      }
     } catch (e) {
       _setError(e.toString());
+      // Keep existing data if API fails
     } finally {
       _setLoading(false);
     }
   }
 
+  Future<void> loadOrdersByTab(String tab, {int page = 1}) async {
+    if (page == 1) _setLoading(true);
+    
+    try {
+      final result = await _apiService.getDriverOrders(tab: tab, page: page);
+      
+      if (result['success'] == true) {
+        final orders = result['orders'] as List<Order>;
+        
+        if (page == 1) {
+          // Replace existing orders
+          if (tab == 'completed') {
+            _completedOrders = orders;
+          } else {
+            // For today/upcoming tabs, filter into active orders
+            _activeOrders = orders.where((order) => 
+              order.status == OrderStatus.assigned || order.status == OrderStatus.active
+            ).toList();
+          }
+        } else {
+          // Append for pagination
+          if (tab == 'completed') {
+            _completedOrders.addAll(orders);
+          } else {
+            _activeOrders.addAll(orders.where((order) => 
+              order.status == OrderStatus.assigned || order.status == OrderStatus.active
+            ));
+          }
+        }
+        _setError('');
+      }
+    } catch (e) {
+      _setError(e.toString());
+    } finally {
+      if (page == 1) _setLoading(false);
+    }
+  }
+
+  // This method is for accepting orders that are assigned to the driver
   Future<bool> acceptOrder(String orderId) async {
     try {
-      final success = await _apiService.updateOrderStatus(orderId, OrderStatus.active);
-      if (success) {
-        final orderIndex = _activeOrders.indexWhere((order) => order.id == orderId);
-        if (orderIndex != -1) {
-          final updatedOrder = Order(
-            id: _activeOrders[orderIndex].id,
-            outletId: _activeOrders[orderIndex].outletId,
-            driverId: _activeOrders[orderIndex].driverId,
-            items: _activeOrders[orderIndex].items,
-            totalAmount: _activeOrders[orderIndex].totalAmount,
-            status: OrderStatus.active,
-            paymentMethod: _activeOrders[orderIndex].paymentMethod,
-            createdAt: _activeOrders[orderIndex].createdAt,
-            deliveryAddress: _activeOrders[orderIndex].deliveryAddress,
-            customerName: _activeOrders[orderIndex].customerName,
-            customerPhone: _activeOrders[orderIndex].customerPhone,
-          );
-          _activeOrders[orderIndex] = updatedOrder;
-          notifyListeners();
-        }
+      // For now, just mark as active. In real implementation, this might
+      // involve updating the driver's status or confirming availability
+      final orderIndex = _activeOrders.indexWhere((order) => order.id == orderId);
+      if (orderIndex != -1) {
+        final order = _activeOrders[orderIndex];
+        final updatedOrder = Order(
+          id: order.id,
+          outletId: order.outletId,
+          driverId: order.driverId,
+          items: order.items,
+          totalAmount: order.totalAmount,
+          status: OrderStatus.active,
+          paymentMethod: order.paymentMethod,
+          createdAt: order.createdAt,
+          deliveryAddress: order.deliveryAddress,
+          customerName: order.customerName,
+          customerPhone: order.customerPhone,
+        );
+        _activeOrders[orderIndex] = updatedOrder;
+        notifyListeners();
+        return true;
       }
-      return success;
+      return false;
     } catch (e) {
       _setError('Failed to accept order');
       return false;
+    }
+  }
+
+  // Confirm delivery using OTP (most critical method)
+  Future<Map<String, dynamic>> confirmDelivery(String orderId, String otp) async {
+    try {
+      final result = await _apiService.confirmDelivery(orderId, otp);
+      
+      if (result['success'] == true) {
+        // Move order from active to completed
+        final orderIndex = _activeOrders.indexWhere((order) => order.id == orderId);
+        if (orderIndex != -1) {
+          final deliveredOrder = result['order'] as Order;
+          _activeOrders.removeAt(orderIndex);
+          _completedOrders.insert(0, deliveredOrder);
+          notifyListeners();
+        }
+      }
+      
+      return result;
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Network error: ${e.toString()}',
+        'error_type': 'network',
+      };
     }
   }
 

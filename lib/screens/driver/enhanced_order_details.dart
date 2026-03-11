@@ -3,6 +3,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart';
 import '../../models/order.dart';
 import '../../utils/constants.dart';
+import 'otp_entry_screen.dart';
 
 class EnhancedOrderDetails extends StatefulWidget {
   final Order order;
@@ -419,14 +420,51 @@ class _EnhancedOrderDetailsState extends State<EnhancedOrderDetails> {
         ];
         break;
       case OrderStatus.active:
-        buttons = [
-          Expanded(
-            child: ElevatedButton(
-              onPressed: () => _updateOrderStatus(OrderStatus.delivered),
-              child: const Text('Mark as Delivered'),
+        // Check if outlet has completed receive flow (otp_ready)
+        // For now, simulate that outlet is ready
+        final bool otpReady = true; // This should come from API
+        
+        if (otpReady) {
+          buttons = [
+            Expanded(
+              child: ElevatedButton(
+                onPressed: _navigateToOtpEntry,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+                child: const Text(
+                  'Confirm Delivery',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
             ),
-          ),
-        ];
+          ];
+        } else {
+          buttons = [
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.warning.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                  border: Border.all(color: AppColors.warning),
+                ),
+                child: const Text(
+                  'Waiting for outlet to confirm received items.',
+                  style: TextStyle(
+                    color: AppColors.warning,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+          ];
+        }
         break;
       case OrderStatus.delivered:
         buttons = [
@@ -510,6 +548,14 @@ class _EnhancedOrderDetailsState extends State<EnhancedOrderDetails> {
     if (newStatus == OrderStatus.completed || newStatus == OrderStatus.cancelled) {
       Navigator.of(context).pop();
     }
+  }
+
+  void _navigateToOtpEntry() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => OtpEntryScreen(order: _currentOrder),
+      ),
+    );
   }
 
   void _makePhoneCall(String phoneNumber) async {

@@ -70,7 +70,7 @@ class _NewDriverDashboardState extends State<NewDriverDashboard>
               SliverAppBar(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
-                title: const Text('Driver Dashboard'),
+                title: const Text(AppStrings.dashboard),
                 pinned: true,
                 expandedHeight: 120,
                 flexibleSpace: FlexibleSpaceBar(
@@ -79,7 +79,7 @@ class _NewDriverDashboardState extends State<NewDriverDashboard>
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
-                        colors: [AppColors.primary, AppColors.primaryDark],
+                        colors: [AppColors.primary, AppColors.primaryLight],
                       ),
                     ),
                     child: Padding(
@@ -259,7 +259,7 @@ class _NewDriverDashboardState extends State<NewDriverDashboard>
       padding: const EdgeInsets.all(AppSizes.paddingLarge),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [AppColors.primary, AppColors.primaryDark],
+          colors: [AppColors.primary, AppColors.primaryLight],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),

@@ -1,26 +1,30 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  static const Color primary = Color(0xFFFF6B35);
-  static const Color primaryDark = Color(0xFFE55A2B);
-  static const Color secondary = Color(0xFF2E86AB);
-  static const Color accent = Color(0xFFF18F01);
-  static const Color background = Color(0xFFF8F9FA);
-  static const Color surface = Color(0xFFFFFFFF);
-  static const Color success = Color(0xFF28A745);
-  static const Color warning = Color(0xFFFFC107);
-  static const Color error = Color(0xFFDC3545);
-  static const Color info = Color(0xFF17A2B8);
-  static const Color textPrimary = Color(0xFF212529);
-  static const Color textSecondary = Color(0xFF6C757D);
-  static const Color textLight = Color(0xFF9CA3AF);
-  static const Color border = Color(0xFFE5E7EB);
+  // Driver App Color System from Design Spec
+  static const Color primary = Color(0xFF1B4F35);           // Primary green
+  static const Color primaryLight = Color(0xFF2E8B57);      // Primary light
+  static const Color accent = Color(0xFFC8960C);            // Accent/warning highlights
+  static const Color success = Color(0xFF27AE60);           // Success states
+  static const Color error = Color(0xFFE74C3C);             // Error states
+  static const Color warning = Color(0xFFF39C12);           // Warning/out for delivery
+  static const Color background = Color(0xFFF5F7FA);        // App background
+  static const Color surface = Color(0xFFFFFFFF);           // Cards, modals
+  static const Color textPrimary = Color(0xFF1A1A2E);       // Main text
+  static const Color textSecondary = Color(0xFF6C757D);     // Subtitles, timestamps
+  
+  // Legacy colors for backward compatibility
+  static const Color primaryDark = Color(0xFF1B4F35);       // Same as primary
+  static const Color secondary = Color(0xFF2E8B57);         // Same as primaryLight
+  static const Color info = Color(0xFF2E8B57);              // Same as primaryLight
+  static const Color textLight = Color(0xFF6C757D);         // Same as textSecondary
+  static const Color border = Color(0xFFE5E7EB);            // Light border
 }
 
 class AppStrings {
-  static const String appName = 'Zafar Driver';
+  static const String appName = "Zaf's Tea Driver";
   static const String loginTitle = 'Driver Login';
-  static const String dashboard = 'Driver Dashboard';
+  static const String dashboard = "Zaf's Tea Driver";
   static const String activeOrders = 'Active Orders';
   static const String orderHistory = 'Order History';
   static const String earnings = 'Earnings';
