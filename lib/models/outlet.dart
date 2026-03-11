@@ -10,7 +10,7 @@ class Outlet {
   final String city;
   final String state;
   final String pinCode;
-  final String gstNumber;
+  final String? gstNumber;
   final String? fssaiLicenceNumber;
   final DateTime? fssaiExpiryDate;
   final String? shopActNumber;
@@ -20,7 +20,7 @@ class Outlet {
   final String outletType;
   final DateTime openingDate;
   final String? bankAccountNumber;
-  final String bankIfscCode;
+  final String? bankIfscCode;
   final String? bankName;
   final String? bankAccountHolder;
   final double? latitude;
@@ -44,7 +44,7 @@ class Outlet {
     required this.city,
     required this.state,
     required this.pinCode,
-    required this.gstNumber,
+    this.gstNumber,
     this.fssaiLicenceNumber,
     this.fssaiExpiryDate,
     this.shopActNumber,
@@ -54,7 +54,7 @@ class Outlet {
     required this.outletType,
     required this.openingDate,
     this.bankAccountNumber,
-    required this.bankIfscCode,
+    this.bankIfscCode,
     this.bankName,
     this.bankAccountHolder,
     this.latitude,
@@ -73,30 +73,30 @@ class Outlet {
       outletName: json['outlet_name'],
       ownerName: json['owner_name'],
       contactNumber: json['contact_number'],
-      alternateContact: json['alternate_contact'],
+      alternateContact: json['alternate_contact']?.toString(),
       email: json['email'],
       addressLine1: json['address_line_1'],
-      addressLine2: json['address_line_2'],
+      addressLine2: json['address_line_2']?.toString(),
       city: json['city'],
       state: json['state'],
       pinCode: json['pin_code'],
-      gstNumber: json['gst_number'] ?? '',
-      fssaiLicenceNumber: json['fssai_licence_number'],
+      gstNumber: json['gst_number']?.toString(),
+      fssaiLicenceNumber: json['fssai_licence_number']?.toString(),
       fssaiExpiryDate: json['fssai_expiry_date'] != null ? DateTime.parse(json['fssai_expiry_date']) : null,
-      shopActNumber: json['shop_act_number'],
+      shopActNumber: json['shop_act_number']?.toString(),
       shopActExpiryDate: json['shop_act_expiry_date'] != null ? DateTime.parse(json['shop_act_expiry_date']) : null,
       franchiseSignedDate: json['franchise_signed_date'] != null ? DateTime.parse(json['franchise_signed_date']) : null,
       franchiseExpiryDate: json['franchise_expiry_date'] != null ? DateTime.parse(json['franchise_expiry_date']) : null,
       outletType: json['outlet_type'],
       openingDate: DateTime.parse(json['opening_date']),
-      bankAccountNumber: json['bank_account_number'],
-      bankIfscCode: json['bank_ifsc_code'] ?? '',
-      bankName: json['bank_name'],
-      bankAccountHolder: json['bank_account_holder'],
+      bankAccountNumber: json['bank_account_number']?.toString(),
+      bankIfscCode: json['bank_ifsc_code']?.toString(),
+      bankName: json['bank_name']?.toString(),
+      bankAccountHolder: json['bank_account_holder']?.toString(),
       latitude: json['latitude']?.toDouble(),
       longitude: json['longitude']?.toDouble(),
       status: json['status'] ?? true,
-      statusReason: json['status_reason'],
+      statusReason: json['status_reason']?.toString(),
       createdBy: json['created_by'],
       createdAt: DateTime.parse(json['created_at']),
       updatedAt: DateTime.parse(json['updated_at']),
@@ -142,7 +142,8 @@ class Outlet {
   }
 
   String get fullAddress {
-    final parts = [addressLine1, addressLine2, city, state, pinCode];
-    return parts.where((part) => part != null && part.isNotEmpty).join(', ');
+    final parts = [addressLine1, addressLine2, city, state, pinCode]
+        .where((part) => part != null && part.isNotEmpty);
+    return parts.join(', ');
   }
 }

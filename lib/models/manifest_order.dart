@@ -32,7 +32,7 @@ class ManifestOrder {
       itemsCount: json['items_count'],
       grandTotal: double.parse(json['grand_total'].toString()),
       paymentStatus: json['payment_status'],
-      deliveryOtp: json['delivery_otp'],
+      deliveryOtp: json['delivery_otp']?.toString(),
       orderStatus: json['order_status'],
       items: (json['items'] as List)
           .map((item) => OrderItem.fromJson(item))

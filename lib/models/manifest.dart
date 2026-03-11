@@ -10,7 +10,8 @@ class Manifest {
   final Vehicle vehicle;
   final String? notes;
   final List<ManifestOrder>? orders;
-  final DateTime createdAt;
+  final DateTime? startedAt;
+  final DateTime? createdAt;
 
   Manifest({
     required this.id,
@@ -21,7 +22,8 @@ class Manifest {
     required this.vehicle,
     this.notes,
     this.orders,
-    required this.createdAt,
+    this.startedAt,
+    this.createdAt,
   });
 
   factory Manifest.fromJson(Map<String, dynamic> json) {
@@ -32,13 +34,18 @@ class Manifest {
       status: json['status'],
       totalOrders: json['total_orders'],
       vehicle: Vehicle.fromJson(json['vehicle']),
-      notes: json['notes'],
+      notes: json['notes']?.toString(),
       orders: json['orders'] != null
           ? (json['orders'] as List)
               .map((order) => ManifestOrder.fromJson(order))
               .toList()
           : null,
-      createdAt: DateTime.parse(json['created_at']),
+      startedAt: json['started_at'] != null 
+          ? DateTime.parse(json['started_at'])
+          : null,
+      createdAt: json['created_at'] != null 
+          ? DateTime.parse(json['created_at'])
+          : null,
     );
   }
 
@@ -52,7 +59,8 @@ class Manifest {
       'vehicle': vehicle.toJson(),
       'notes': notes,
       'orders': orders?.map((order) => order.toJson()).toList(),
-      'created_at': createdAt.toIso8601String(),
+      'started_at': startedAt?.toIso8601String(),
+      'created_at': createdAt?.toIso8601String(),
     };
   }
 

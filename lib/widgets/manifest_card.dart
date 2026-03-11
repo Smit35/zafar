@@ -39,8 +39,8 @@ class ManifestCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildHeader(),
-              const SizedBox(height: AppSizes.paddingSmall),
-              _buildVehicleInfo(),
+              // const SizedBox(height: AppSizes.paddingSmall),
+              // _buildVehicleInfo(),
               const SizedBox(height: AppSizes.paddingMedium),
               _buildOrderSummary(),
               if (manifest.isReadyToDispatch && onStartDelivery != null) ...[
@@ -133,7 +133,7 @@ class ManifestCard extends StatelessWidget {
     );
   }
 
-  Widget _buildVehicleInfo() {
+  /*Widget _buildVehicleInfo() {
     return Container(
       padding: const EdgeInsets.all(AppSizes.paddingSmall),
       decoration: BoxDecoration(
@@ -174,7 +174,7 @@ class ManifestCard extends StatelessWidget {
         ],
       ),
     );
-  }
+  }*/
 
   Widget _buildOrderSummary() {
     return Row(

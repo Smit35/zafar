@@ -546,7 +546,7 @@ class ApiService {
     } catch (e) {
       return {
         'success': false,
-        'message': 'No internet connection. Please check your network.',
+        'message': 'Failed to start delivery $e',
       };
     }
   }

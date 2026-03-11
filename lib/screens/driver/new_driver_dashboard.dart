@@ -50,7 +50,9 @@ class _NewDriverDashboardState extends State<NewDriverDashboard>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: _selectedIndex == 0 ? _buildOrdersTab() : _selectedIndex == 1 ? _buildEarningsTab() : _buildProfileTab(),
+      body: _selectedIndex == 0 ? _buildOrdersTab() :
+      // _selectedIndex == 1 ? _buildEarningsTab() :
+      _buildProfileTab(),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: (index) => setState(() => _selectedIndex = index),
@@ -62,10 +64,10 @@ class _NewDriverDashboardState extends State<NewDriverDashboard>
             icon: Icon(Icons.assignment),
             label: 'Orders',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.attach_money),
-            label: 'Earnings',
-          ),
+          // BottomNavigationBarItem(
+          //   icon: Icon(Icons.attach_money),
+          //   label: 'Earnings',
+          // ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person),
             label: 'Profile',
@@ -87,7 +89,7 @@ class _NewDriverDashboardState extends State<NewDriverDashboard>
                 title: const Text(AppStrings.dashboard),
                 pinned: true,
                 expandedHeight: 120,
-                flexibleSpace: FlexibleSpaceBar(
+                /*flexibleSpace: FlexibleSpaceBar(
                   background: Container(
                     decoration: const BoxDecoration(
                       gradient: LinearGradient(
@@ -123,7 +125,7 @@ class _NewDriverDashboardState extends State<NewDriverDashboard>
                       ),
                     ),
                   ),
-                ),
+                ),*/
                 bottom: TabBar(
                   controller: _tabController,
                   labelColor: Colors.white,
@@ -412,21 +414,21 @@ class _NewDriverDashboardState extends State<NewDriverDashboard>
                 ),
               ),
               const SizedBox(height: AppSizes.paddingLarge),
-              _buildProfileOption(
-                icon: Icons.edit,
-                title: 'Edit Profile',
-                onTap: () {},
-              ),
-              _buildProfileOption(
-                icon: Icons.history,
-                title: 'Order History',
-                onTap: () {},
-              ),
-              _buildProfileOption(
-                icon: Icons.help,
-                title: 'Help & Support',
-                onTap: () {},
-              ),
+              // _buildProfileOption(
+              //   icon: Icons.edit,
+              //   title: 'Edit Profile',
+              //   onTap: () {},
+              // ),
+              // _buildProfileOption(
+              //   icon: Icons.history,
+              //   title: 'Order History',
+              //   onTap: () {},
+              // ),
+              // _buildProfileOption(
+              //   icon: Icons.help,
+              //   title: 'Help & Support',
+              //   onTap: () {},
+              // ),
               _buildProfileOption(
                 icon: Icons.logout,
                 title: 'Logout',

@@ -29,14 +29,34 @@ class _ManifestDetailsScreenState extends State<ManifestDetailsScreen> {
   }
 
   Future<void> _loadManifestDetails() async {
-    final manifestProvider = Provider.of<ManifestProvider>(context, listen: false);
-    final manifest = await manifestProvider.getManifestDetails(widget.manifestId);
+    setState(() {
+      _isLoading = true;
+    });
     
-    if (mounted) {
-      setState(() {
-        _manifest = manifest;
-        _isLoading = false;
-      });
+    try {
+      final manifestProvider = Provider.of<ManifestProvider>(context, listen: false);
+      final manifest = await manifestProvider.getManifestDetails(widget.manifestId);
+      
+      if (mounted) {
+        setState(() {
+          _manifest = manifest;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _manifest = null;
+          _isLoading = false;
+        });
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().replaceFirst('Exception: ', '')),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
     }
   }
 
@@ -143,8 +163,8 @@ class _ManifestDetailsScreenState extends State<ManifestDetailsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildManifestHeader(),
-          const SizedBox(height: AppSizes.paddingLarge),
-          _buildVehicleDetails(),
+          // const SizedBox(height: AppSizes.paddingLarge),
+          // _buildVehicleDetails(),
           const SizedBox(height: AppSizes.paddingLarge),
           _buildOrdersList(),
           if (_manifest!.isReadyToDispatch) ...[
@@ -261,7 +281,7 @@ class _ManifestDetailsScreenState extends State<ManifestDetailsScreen> {
     );
   }
 
-  Widget _buildVehicleDetails() {
+  /*Widget _buildVehicleDetails() {
     final vehicle = _manifest!.vehicle;
     
     return Container(
@@ -321,7 +341,7 @@ class _ManifestDetailsScreenState extends State<ManifestDetailsScreen> {
         ],
       ),
     );
-  }
+  }*/
 
   Widget _buildOrdersList() {
     if (_manifest!.orders == null || _manifest!.orders!.isEmpty) {

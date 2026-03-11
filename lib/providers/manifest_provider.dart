@@ -85,10 +85,6 @@ class ManifestProvider with ChangeNotifier {
   }
 
   Future<Manifest?> getManifestDetails(int manifestId) async {
-    _isLoading = true;
-    _error = '';
-    notifyListeners();
-
     try {
       final response = await _apiService.getManifestDetails(manifestId);
       
@@ -98,16 +94,12 @@ class ManifestProvider with ChangeNotifier {
         // Update the manifest in our lists
         _updateManifestInLists(manifest);
         
-        _isLoading = false;
-        notifyListeners();
         return manifest;
       }
     } catch (e) {
-      _error = 'Failed to load manifest details: ${e.toString()}';
+      throw Exception('Failed to load manifest details: ${e.toString()}');
     }
 
-    _isLoading = false;
-    notifyListeners();
     return null;
   }
 
