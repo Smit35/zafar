@@ -22,11 +22,11 @@ class Driver {
   factory Driver.fromJson(Map<String, dynamic> json) {
     return Driver(
       id: json['id'],
-      name: json['name'],
+      name: json['full_name'],
       email: json['email'],
-      contact: json['contact'],
+      contact: json['contact_number'],
       licenceNumber: json['licence_number'],
-      vehicle: json['vehicle'],
+      vehicle: json['vehicle']?.toString(),
       status: json['status'] ?? false,
       activeManifestCount: json['active_manifest_count'] ?? 0,
     );
