@@ -63,13 +63,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 color: Colors.orange[600],
               ),
               const SizedBox(height: 16),
-              Text(
-                'Zafar Food Delivery',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.orange[800],
-                ),
+              Image.asset(
+                'assets/images/logo-text.png',
+                height: 60,
               ),
               const SizedBox(height: 8),
               Text(
