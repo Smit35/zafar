@@ -4,6 +4,7 @@ import '../models/order.dart';
 import '../models/cart_item.dart';
 import '../models/menu_item.dart';
 import '../models/driver.dart';
+import '../models/manifest.dart';
 
 class ApiService {
   static const String baseUrl = 'https://zafar-api.copytrading.cloud';//'''https://zafs.copytrading.cloud';
@@ -454,6 +455,99 @@ class ApiService {
         return 'completed';
       case OrderStatus.cancelled:
         return 'cancelled';
+    }
+  }
+
+  // Get driver manifests
+  Future<Map<String, dynamic>> getDriverManifests({String? status}) async {
+    try {
+      final uri = status != null 
+        ? Uri.parse('$baseUrl$apiVersion/driver/manifests?status=$status')
+        : Uri.parse('$baseUrl$apiVersion/driver/manifests');
+        
+      final response = await http.get(uri, headers: _headers);
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return {
+          'success': true,
+          'manifests': (data['manifests'] as List)
+              .map((json) => Manifest.fromJson(json))
+              .toList(),
+        };
+      } else if (response.statusCode == 401) {
+        throw Exception('Session expired');
+      } else {
+        throw Exception('Failed to load manifests');
+      }
+    } catch (e) {
+      throw Exception('Failed to load manifests: ${e.toString()}');
+    }
+  }
+
+  // Get manifest details by ID
+  Future<Map<String, dynamic>> getManifestDetails(int manifestId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl$apiVersion/driver/manifests/$manifestId'),
+        headers: _headers,
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return {
+          'success': true,
+          'manifest': Manifest.fromJson(data['manifest']),
+        };
+      } else if (response.statusCode == 401) {
+        throw Exception('Session expired');
+      } else if (response.statusCode == 404) {
+        throw Exception('Manifest not found');
+      } else {
+        throw Exception('Failed to load manifest details');
+      }
+    } catch (e) {
+      throw Exception('Failed to load manifest details: ${e.toString()}');
+    }
+  }
+
+  // Start delivery for a manifest
+  Future<Map<String, dynamic>> startDelivery(int manifestId) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl$apiVersion/driver/manifests/$manifestId/start-delivery'),
+        headers: _headers,
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'message': data['message'] ?? 'Delivery started successfully',
+          'manifest': Manifest.fromJson(data['manifest']),
+        };
+      } else if (response.statusCode == 401) {
+        return {
+          'success': false,
+          'message': 'Session expired',
+        };
+      } else if (response.statusCode == 422) {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Cannot start delivery for this manifest',
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to start delivery',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'No internet connection. Please check your network.',
+      };
     }
   }
 

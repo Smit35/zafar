@@ -3,10 +3,13 @@ import 'package:provider/provider.dart';
 import '../../models/order.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/order_provider.dart';
+import '../../providers/manifest_provider.dart';
 import '../../utils/constants.dart';
 import '../../widgets/order_card.dart';
+import '../../widgets/manifest_card.dart';
 import '../auth/login_screen.dart';
 import 'enhanced_order_details.dart';
+import 'manifest_details_screen.dart';
 
 class NewDriverDashboard extends StatefulWidget {
   const NewDriverDashboard({super.key});
@@ -24,6 +27,17 @@ class _NewDriverDashboardState extends State<NewDriverDashboard>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    
+    // Initialize manifest provider and fetch data
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final manifestProvider = Provider.of<ManifestProvider>(context, listen: false);
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      authProvider.setManifestProvider(manifestProvider);
+      
+      if (authProvider.isLoggedIn) {
+        manifestProvider.fetchManifests();
+      }
+    });
   }
 
   @override
@@ -62,8 +76,8 @@ class _NewDriverDashboardState extends State<NewDriverDashboard>
   }
 
   Widget _buildOrdersTab() {
-    return Consumer<OrderProvider>(
-      builder: (context, orderProvider, child) {
+    return Consumer2<OrderProvider, ManifestProvider>(
+      builder: (context, orderProvider, manifestProvider, child) {
         return NestedScrollView(
           headerSliverBuilder: (context, innerBoxIsScrolled) {
             return [
@@ -100,7 +114,10 @@ class _NewDriverDashboardState extends State<NewDriverDashboard>
                           ),
                           IconButton(
                             icon: const Icon(Icons.refresh, color: Colors.white),
-                            onPressed: () => orderProvider.refreshOrders(),
+                            onPressed: () {
+                              orderProvider.refreshOrders();
+                              manifestProvider.refreshManifests();
+                            },
                           ),
                         ],
                       ),
@@ -124,8 +141,8 @@ class _NewDriverDashboardState extends State<NewDriverDashboard>
           body: TabBarView(
             controller: _tabController,
             children: [
-              _buildNewOrdersList(orderProvider),
-              _buildActiveOrdersList(orderProvider),
+              _buildNewOrdersList(manifestProvider),
+              _buildActiveOrdersList(manifestProvider),
               _buildCompletedOrdersList(orderProvider),
             ],
           ),
@@ -134,67 +151,63 @@ class _NewDriverDashboardState extends State<NewDriverDashboard>
     );
   }
 
-  Widget _buildNewOrdersList(OrderProvider orderProvider) {
-    final newOrders = orderProvider.activeOrders
-        .where((order) => order.status == OrderStatus.assigned)
-        .toList();
+  Widget _buildNewOrdersList(ManifestProvider manifestProvider) {
+    final newManifests = manifestProvider.newManifests;
 
-    if (orderProvider.isLoading) {
+    if (manifestProvider.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (newOrders.isEmpty) {
+    if (newManifests.isEmpty) {
       return _buildEmptyState(
         icon: Icons.assignment_outlined,
-        title: 'No new orders',
-        subtitle: 'New orders will appear here',
+        title: 'No new manifests',
+        subtitle: 'New manifests will appear here',
       );
     }
 
     return RefreshIndicator(
-      onRefresh: orderProvider.refreshOrders,
+      onRefresh: manifestProvider.refreshManifests,
       child: ListView.builder(
         padding: const EdgeInsets.all(AppSizes.paddingMedium),
-        itemCount: newOrders.length,
+        itemCount: newManifests.length,
         itemBuilder: (context, index) {
-          final order = newOrders[index];
-          return OrderCard(
-            order: order,
-            onTap: () => _navigateToOrderDetails(order),
-            onAccept: () => _acceptOrder(order),
+          final manifest = newManifests[index];
+          return ManifestCard(
+            manifest: manifest,
+            onTap: () => _navigateToManifestDetails(manifest.id),
+            onStartDelivery: () => _startDelivery(manifest.id),
           );
         },
       ),
     );
   }
 
-  Widget _buildActiveOrdersList(OrderProvider orderProvider) {
-    final activeOrders = orderProvider.activeOrders
-        .where((order) => order.status == OrderStatus.active)
-        .toList();
+  Widget _buildActiveOrdersList(ManifestProvider manifestProvider) {
+    final activeManifests = manifestProvider.activeManifests;
 
-    if (orderProvider.isLoading) {
+    if (manifestProvider.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (activeOrders.isEmpty) {
+    if (activeManifests.isEmpty) {
       return _buildEmptyState(
         icon: Icons.local_shipping_outlined,
-        title: 'No active orders',
-        subtitle: 'Accepted orders will appear here',
+        title: 'No active deliveries',
+        subtitle: 'Active deliveries will appear here',
       );
     }
 
     return RefreshIndicator(
-      onRefresh: orderProvider.refreshOrders,
+      onRefresh: manifestProvider.refreshManifests,
       child: ListView.builder(
         padding: const EdgeInsets.all(AppSizes.paddingMedium),
-        itemCount: activeOrders.length,
+        itemCount: activeManifests.length,
         itemBuilder: (context, index) {
-          final order = activeOrders[index];
-          return OrderCard(
-            order: order,
-            onTap: () => _navigateToOrderDetails(order),
+          final manifest = activeManifests[index];
+          return ManifestCard(
+            manifest: manifest,
+            onTap: () => _navigateToManifestDetails(manifest.id),
           );
         },
       ),
@@ -511,6 +524,20 @@ class _NewDriverDashboardState extends State<NewDriverDashboard>
     );
   }
 
+  void _navigateToManifestDetails(int manifestId) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ManifestDetailsScreen(
+          manifestId: manifestId,
+          onDeliveryStarted: () {
+            // Refresh the manifests when delivery is started
+            Provider.of<ManifestProvider>(context, listen: false).refreshManifests();
+          },
+        ),
+      ),
+    );
+  }
+
   void _acceptOrder(Order order) async {
     final orderProvider = Provider.of<OrderProvider>(context, listen: false);
     final success = await orderProvider.acceptOrder(order.id);
@@ -529,6 +556,42 @@ class _NewDriverDashboardState extends State<NewDriverDashboard>
           backgroundColor: AppColors.error,
         ),
       );
+    }
+  }
+
+  void _startDelivery(int manifestId) async {
+    final manifestProvider = Provider.of<ManifestProvider>(context, listen: false);
+    
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
+
+    final success = await manifestProvider.startDelivery(manifestId);
+    
+    if (mounted) {
+      Navigator.of(context).pop(); // Close loading dialog
+      
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Delivery started successfully!'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(manifestProvider.error.isNotEmpty 
+                ? manifestProvider.error 
+                : 'Failed to start delivery'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
     }
   }
 

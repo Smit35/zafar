@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'providers/auth_provider.dart';
 import 'providers/cart_provider.dart';
 import 'providers/order_provider.dart';
+import 'providers/manifest_provider.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/outlet/outlet_home_screen.dart';
 import 'screens/driver/new_driver_dashboard.dart';
@@ -24,6 +25,7 @@ class ZafarFoodDeliveryApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => CartProvider()),
         ChangeNotifierProvider(create: (_) => OrderProvider()),
+        ChangeNotifierProvider(create: (_) => ManifestProvider()),
       ],
       child: MaterialApp(
         title: AppStrings.appName,

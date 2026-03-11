@@ -4,12 +4,14 @@ import 'dart:convert';
 import '../models/user.dart';
 import '../models/driver.dart';
 import '../services/api_service.dart';
+import 'manifest_provider.dart';
 
 class AuthProvider with ChangeNotifier {
   final ApiService _apiService = ApiService();
   User? _user;
   bool _isLoading = false;
   String _error = '';
+  ManifestProvider? _manifestProvider;
 
   User? get user => _user;
   bool get isLoading => _isLoading;
@@ -41,6 +43,11 @@ class AuthProvider with ChangeNotifier {
           phone: driver.contact,
           type: UserType.driver,
         );
+        // Fetch manifests after successful login
+        if (_manifestProvider != null) {
+          _manifestProvider!.fetchManifests();
+        }
+        
         _isLoading = false;
         notifyListeners();
         return true;
@@ -90,6 +97,10 @@ class AuthProvider with ChangeNotifier {
     }
     
     notifyListeners();
+  }
+
+  void setManifestProvider(ManifestProvider manifestProvider) {
+    _manifestProvider = manifestProvider;
   }
 
   void clearError() {
