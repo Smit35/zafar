@@ -160,28 +160,32 @@ class _NewDriverDashboardState extends State<NewDriverDashboard>
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (newManifests.isEmpty) {
-      return _buildEmptyState(
-        icon: Icons.assignment_outlined,
-        title: 'No new manifests',
-        subtitle: 'New manifests will appear here',
-      );
-    }
-
     return RefreshIndicator(
       onRefresh: manifestProvider.refreshManifests,
-      child: ListView.builder(
-        padding: const EdgeInsets.all(AppSizes.paddingMedium),
-        itemCount: newManifests.length,
-        itemBuilder: (context, index) {
-          final manifest = newManifests[index];
-          return ManifestCard(
-            manifest: manifest,
-            onTap: () => _navigateToManifestDetails(manifest.id),
-            onStartDelivery: () => _startDelivery(manifest.id),
-          );
-        },
-      ),
+      child: newManifests.isEmpty
+          ? ListView(
+              padding: const EdgeInsets.all(AppSizes.paddingMedium),
+              children: [
+                SizedBox(height: MediaQuery.of(context).size.height * 0.3),
+                _buildEmptyState(
+                  icon: Icons.assignment_outlined,
+                  title: 'No new manifests',
+                  subtitle: 'Pull down to refresh and check for new manifests',
+                ),
+              ],
+            )
+          : ListView.builder(
+              padding: const EdgeInsets.all(AppSizes.paddingMedium),
+              itemCount: newManifests.length,
+              itemBuilder: (context, index) {
+                final manifest = newManifests[index];
+                return ManifestCard(
+                  manifest: manifest,
+                  onTap: () => _navigateToManifestDetails(manifest.id),
+                  onStartDelivery: () => _startDelivery(manifest.id),
+                );
+              },
+            ),
     );
   }
 
@@ -192,56 +196,88 @@ class _NewDriverDashboardState extends State<NewDriverDashboard>
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (activeManifests.isEmpty) {
-      return _buildEmptyState(
-        icon: Icons.local_shipping_outlined,
-        title: 'No active deliveries',
-        subtitle: 'Active deliveries will appear here',
-      );
-    }
-
     return RefreshIndicator(
       onRefresh: manifestProvider.refreshManifests,
-      child: ListView.builder(
-        padding: const EdgeInsets.all(AppSizes.paddingMedium),
-        itemCount: activeManifests.length,
-        itemBuilder: (context, index) {
-          final manifest = activeManifests[index];
-          return ManifestCard(
-            manifest: manifest,
-            onTap: () => _navigateToManifestDetails(manifest.id),
-          );
-        },
-      ),
+      child: activeManifests.isEmpty
+          ? ListView(
+              padding: const EdgeInsets.all(AppSizes.paddingMedium),
+              children: [
+                SizedBox(height: MediaQuery.of(context).size.height * 0.3),
+                _buildEmptyState(
+                  icon: Icons.local_shipping_outlined,
+                  title: 'No active deliveries',
+                  subtitle: 'Pull down to refresh and check for active deliveries',
+                ),
+              ],
+            )
+          : ListView.builder(
+              padding: const EdgeInsets.all(AppSizes.paddingMedium),
+              itemCount: activeManifests.length,
+              itemBuilder: (context, index) {
+                final manifest = activeManifests[index];
+                return ManifestCard(
+                  manifest: manifest,
+                  onTap: () => _navigateToManifestDetails(manifest.id),
+                );
+              },
+            ),
     );
   }
 
   Widget _buildCompletedOrdersList(OrderProvider orderProvider) {
-    if (orderProvider.isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
+    return Consumer<ManifestProvider>(
+      builder: (context, manifestProvider, child) {
+        // Show manifests that are completed/delivered for better consistency
+        final completedManifests = manifestProvider.allManifests
+            .where((manifest) => manifest.status == 'delivered' || manifest.status == 'completed')
+            .toList();
 
-    if (orderProvider.completedOrders.isEmpty) {
-      return _buildEmptyState(
-        icon: Icons.check_circle_outlined,
-        title: 'No completed orders',
-        subtitle: 'Completed orders will appear here',
-      );
-    }
+        if (manifestProvider.isLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-    return RefreshIndicator(
-      onRefresh: orderProvider.refreshOrders,
-      child: ListView.builder(
-        padding: const EdgeInsets.all(AppSizes.paddingMedium),
-        itemCount: orderProvider.completedOrders.length,
-        itemBuilder: (context, index) {
-          final order = orderProvider.completedOrders[index];
-          return OrderCard(
-            order: order,
-            onTap: () => _navigateToOrderDetails(order),
-          );
-        },
-      ),
+        return RefreshIndicator(
+          onRefresh: () async {
+            // Refresh both manifest and order data
+            await Future.wait([
+              manifestProvider.refreshManifests(),
+              orderProvider.refreshOrders(),
+            ]);
+          },
+          child: (completedManifests.isEmpty && orderProvider.completedOrders.isEmpty)
+              ? ListView(
+                  padding: const EdgeInsets.all(AppSizes.paddingMedium),
+                  children: [
+                    SizedBox(height: MediaQuery.of(context).size.height * 0.3),
+                    _buildEmptyState(
+                      icon: Icons.check_circle_outlined,
+                      title: 'No completed deliveries',
+                      subtitle: 'Pull down to refresh and check for completed deliveries',
+                    ),
+                  ],
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.all(AppSizes.paddingMedium),
+                  itemCount: completedManifests.length + orderProvider.completedOrders.length,
+                  itemBuilder: (context, index) {
+                    if (index < completedManifests.length) {
+                      final manifest = completedManifests[index];
+                      return ManifestCard(
+                        manifest: manifest,
+                        onTap: () => _navigateToManifestDetails(manifest.id),
+                      );
+                    } else {
+                      final orderIndex = index - completedManifests.length;
+                      final order = orderProvider.completedOrders[orderIndex];
+                      return OrderCard(
+                        order: order,
+                        onTap: () => _navigateToOrderDetails(order),
+                      );
+                    }
+                  },
+                ),
+        );
+      },
     );
   }
 
