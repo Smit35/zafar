@@ -551,6 +551,45 @@ class ApiService {
     }
   }
 
+  // Generate OTP for order
+  Future<Map<String, dynamic>> generateOTP(int orderId) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl$apiVersion/driver/orders/$orderId/generate-otp'),
+        headers: _headers,
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'message': data['message'] ?? 'OTP generated successfully',
+        };
+      } else if (response.statusCode == 401) {
+        return {
+          'success': false,
+          'message': 'Session expired',
+        };
+      } else if (response.statusCode == 422) {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Cannot generate OTP for this order',
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to generate OTP',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Failed to generate OTP: ${e.toString()}',
+      };
+    }
+  }
+
   // Mock data helper
   List<Order> _getMockOrders(String status) {
     // This would be replaced by actual API data

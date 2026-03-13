@@ -21,6 +21,7 @@ class ManifestDetailsScreen extends StatefulWidget {
 class _ManifestDetailsScreenState extends State<ManifestDetailsScreen> {
   Manifest? _manifest;
   bool _isLoading = true;
+  Map<int, bool> _otpGeneratedOrders = {};
 
   @override
   void initState() {
@@ -458,6 +459,10 @@ class _ManifestDetailsScreenState extends State<ManifestDetailsScreen> {
               ),
             ],
           ),
+          if (_manifest!.status == 'out_for_delivery') ...[
+            const SizedBox(height: AppSizes.paddingMedium),
+            _buildGenerateOTPButton(order),
+          ],
         ],
       ),
     );
@@ -493,6 +498,114 @@ class _ManifestDetailsScreenState extends State<ManifestDetailsScreen> {
         ),
       ),
     );
+  }
+
+  Widget _buildGenerateOTPButton(order) {
+    final isOTPGenerated = _otpGeneratedOrders[order.id] ?? false;
+    final isDelivered = order.orderStatus == 'delivered';
+    
+    if (isDelivered) {
+      return const SizedBox.shrink();
+    }
+    
+    if (isOTPGenerated) {
+      return Container(
+        padding: const EdgeInsets.all(AppSizes.paddingSmall),
+        decoration: BoxDecoration(
+          color: AppColors.success.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
+          border: Border.all(color: AppColors.success.withOpacity(0.3)),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              Icons.check_circle,
+              color: AppColors.success,
+              size: 16,
+            ),
+            const SizedBox(width: 8),
+            const Text(
+              'OTP Generated',
+              style: TextStyle(
+                color: AppColors.success,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: () => _generateOTP(order.id),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.secondary,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
+          ),
+          elevation: 0,
+        ),
+        child: const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.security, size: 16),
+            SizedBox(width: 8),
+            Text(
+              'Generate OTP',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _generateOTP(int orderId) async {
+    final manifestProvider = Provider.of<ManifestProvider>(context, listen: false);
+    
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
+
+    final success = await manifestProvider.generateOTP(orderId);
+    
+    if (mounted) {
+      Navigator.of(context).pop();
+      
+      if (success) {
+        setState(() {
+          _otpGeneratedOrders[orderId] = true;
+        });
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('OTP generated successfully!'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(manifestProvider.error.isNotEmpty 
+                ? manifestProvider.error 
+                : 'Failed to generate OTP'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
   }
 
   String _formatDate(DateTime date) {
