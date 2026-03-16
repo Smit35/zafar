@@ -7,7 +7,7 @@ import '../models/driver.dart';
 import '../models/manifest.dart';
 
 class ApiService {
-  static const String baseUrl = 'https://zafar-api.copytrading.cloud';//'''https://zafs.copytrading.cloud';
+  static const String baseUrl = 'https://zafs.copytrading.cloud';//'https://zafar-api.copytrading.cloud';
   static const String apiVersion = '/api/v1';
 
   // Singleton pattern

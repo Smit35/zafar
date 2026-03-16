@@ -26,7 +26,7 @@ class _NewDriverDashboardState extends State<NewDriverDashboard>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 2, vsync: this);
     
     // Initialize manifest provider and fetch data
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -134,7 +134,7 @@ class _NewDriverDashboardState extends State<NewDriverDashboard>
                   tabs: const [
                     Tab(text: 'New Orders'),
                     Tab(text: 'Active'),
-                    Tab(text: 'Completed'),
+                    // Tab(text: 'Completed'),
                   ],
                 ),
               ),
@@ -145,7 +145,7 @@ class _NewDriverDashboardState extends State<NewDriverDashboard>
             children: [
               _buildNewOrdersList(manifestProvider),
               _buildActiveOrdersList(manifestProvider),
-              _buildCompletedOrdersList(orderProvider),
+              // _buildCompletedOrdersList(orderProvider),
             ],
           ),
         );
@@ -224,62 +224,63 @@ class _NewDriverDashboardState extends State<NewDriverDashboard>
     );
   }
 
-  Widget _buildCompletedOrdersList(OrderProvider orderProvider) {
-    return Consumer<ManifestProvider>(
-      builder: (context, manifestProvider, child) {
-        // Show manifests that are completed/delivered for better consistency
-        final completedManifests = manifestProvider.allManifests
-            .where((manifest) => manifest.status == 'delivered' || manifest.status == 'completed')
-            .toList();
+  // Commented out completed orders tab
+  // Widget _buildCompletedOrdersList(OrderProvider orderProvider) {
+  //   return Consumer<ManifestProvider>(
+  //     builder: (context, manifestProvider, child) {
+  //       // Show manifests that are completed/delivered for better consistency
+  //       final completedManifests = manifestProvider.allManifests
+  //           .where((manifest) => manifest.status == 'delivered' || manifest.status == 'completed')
+  //           .toList();
 
-        if (manifestProvider.isLoading) {
-          return const Center(child: CircularProgressIndicator());
-        }
+  //       if (manifestProvider.isLoading) {
+  //         return const Center(child: CircularProgressIndicator());
+  //       }
 
-        return RefreshIndicator(
-          onRefresh: () async {
-            // Refresh both manifest and order data
-            await Future.wait([
-              manifestProvider.refreshManifests(),
-              orderProvider.refreshOrders(),
-            ]);
-          },
-          child: (completedManifests.isEmpty && orderProvider.completedOrders.isEmpty)
-              ? ListView(
-                  padding: const EdgeInsets.all(AppSizes.paddingMedium),
-                  children: [
-                    SizedBox(height: MediaQuery.of(context).size.height * 0.3),
-                    _buildEmptyState(
-                      icon: Icons.check_circle_outlined,
-                      title: 'No completed deliveries',
-                      subtitle: 'Pull down to refresh and check for completed deliveries',
-                    ),
-                  ],
-                )
-              : ListView.builder(
-                  padding: const EdgeInsets.all(AppSizes.paddingMedium),
-                  itemCount: completedManifests.length + orderProvider.completedOrders.length,
-                  itemBuilder: (context, index) {
-                    if (index < completedManifests.length) {
-                      final manifest = completedManifests[index];
-                      return ManifestCard(
-                        manifest: manifest,
-                        onTap: () => _navigateToManifestDetails(manifest.id),
-                      );
-                    } else {
-                      final orderIndex = index - completedManifests.length;
-                      final order = orderProvider.completedOrders[orderIndex];
-                      return OrderCard(
-                        order: order,
-                        onTap: () => _navigateToOrderDetails(order),
-                      );
-                    }
-                  },
-                ),
-        );
-      },
-    );
-  }
+  //       return RefreshIndicator(
+  //         onRefresh: () async {
+  //           // Refresh both manifest and order data
+  //           await Future.wait([
+  //             manifestProvider.refreshManifests(),
+  //             orderProvider.refreshOrders(),
+  //           ]);
+  //         },
+  //         child: (completedManifests.isEmpty && orderProvider.completedOrders.isEmpty)
+  //             ? ListView(
+  //                 padding: const EdgeInsets.all(AppSizes.paddingMedium),
+  //                 children: [
+  //                   SizedBox(height: MediaQuery.of(context).size.height * 0.3),
+  //                   _buildEmptyState(
+  //                     icon: Icons.check_circle_outlined,
+  //                     title: 'No completed deliveries',
+  //                     subtitle: 'Pull down to refresh and check for completed deliveries',
+  //                   ),
+  //                 ],
+  //               )
+  //             : ListView.builder(
+  //                 padding: const EdgeInsets.all(AppSizes.paddingMedium),
+  //                 itemCount: completedManifests.length + orderProvider.completedOrders.length,
+  //                 itemBuilder: (context, index) {
+  //                   if (index < completedManifests.length) {
+  //                     final manifest = completedManifests[index];
+  //                     return ManifestCard(
+  //                       manifest: manifest,
+  //                       onTap: () => _navigateToManifestDetails(manifest.id),
+  //                     );
+  //                   } else {
+  //                     final orderIndex = index - completedManifests.length;
+  //                     final order = orderProvider.completedOrders[orderIndex];
+  //                     return OrderCard(
+  //                       order: order,
+  //                       onTap: () => _navigateToOrderDetails(order),
+  //                     );
+  //                   }
+  //                 },
+  //               ),
+  //       );
+  //     },
+  //   );
+  // }
 
   Widget _buildEarningsTab() {
     return SingleChildScrollView(

@@ -176,28 +176,83 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen>
           indicatorColor: Colors.white,
           tabs: const [
             Tab(
+              icon: Icon(Icons.assignment),
+              text: 'New Orders',
+            ),
+            Tab(
               icon: Icon(Icons.local_shipping),
               text: 'Active Orders',
             ),
-            Tab(
-              icon: Icon(Icons.check_circle),
-              text: 'Completed',
-            ),
+            // Tab(
+            //   icon: Icon(Icons.check_circle),
+            //   text: 'Completed',
+            // ),
           ],
         ),
       ),
       body: TabBarView(
         controller: _tabController,
         children: [
+          _buildNewOrdersList(),
           _buildActiveOrdersList(),
-          _buildCompletedOrdersList(),
+          // _buildCompletedOrdersList(),
         ],
       ),
     );
   }
 
+  Widget _buildNewOrdersList() {
+    // Filter orders that are assigned but not yet active
+    final newOrders = _activeOrders.where((order) => order.status == OrderStatus.assigned).toList();
+    
+    if (newOrders.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.assignment_outlined,
+              size: 80,
+              color: Colors.grey[400],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No new orders',
+              style: TextStyle(
+                fontSize: 18,
+                color: Colors.grey[600],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'New orders will appear here',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[500],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: newOrders.length,
+      itemBuilder: (context, index) {
+        final order = newOrders[index];
+        return _buildOrderCard(order, true);
+      },
+    );
+  }
+
   Widget _buildActiveOrdersList() {
-    if (_activeOrders.isEmpty) {
+    // Filter orders that are active (not assigned, not completed)
+    final activeOrders = _activeOrders.where((order) => 
+        order.status == OrderStatus.active || 
+        order.status == OrderStatus.delivered
+    ).toList();
+    if (activeOrders.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -230,55 +285,56 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen>
 
     return ListView.builder(
       padding: const EdgeInsets.all(16),
-      itemCount: _activeOrders.length,
+      itemCount: activeOrders.length,
       itemBuilder: (context, index) {
-        final order = _activeOrders[index];
+        final order = activeOrders[index];
         return _buildOrderCard(order, true);
       },
     );
   }
 
-  Widget _buildCompletedOrdersList() {
-    if (_completedOrders.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.check_circle_outlined,
-              size: 80,
-              color: Colors.grey[400],
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'No completed orders',
-              style: TextStyle(
-                fontSize: 18,
-                color: Colors.grey[600],
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Completed orders will appear here',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[500],
-              ),
-            ),
-          ],
-        ),
-      );
-    }
+  // Commented out completed orders tab
+  // Widget _buildCompletedOrdersList() {
+  //   if (_completedOrders.isEmpty) {
+  //     return Center(
+  //       child: Column(
+  //         mainAxisAlignment: MainAxisAlignment.center,
+  //         children: [
+  //           Icon(
+  //             Icons.check_circle_outlined,
+  //             size: 80,
+  //             color: Colors.grey[400],
+  //           ),
+  //           const SizedBox(height: 16),
+  //           Text(
+  //             'No completed orders',
+  //             style: TextStyle(
+  //               fontSize: 18,
+  //               color: Colors.grey[600],
+  //             ),
+  //           ),
+  //           const SizedBox(height: 8),
+  //           Text(
+  //             'Completed orders will appear here',
+  //             style: TextStyle(
+  //               fontSize: 14,
+  //               color: Colors.grey[500],
+  //             ),
+  //           ),
+  //         ],
+  //       ),
+  //     );
+  //   }
 
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: _completedOrders.length,
-      itemBuilder: (context, index) {
-        final order = _completedOrders[index];
-        return _buildOrderCard(order, false);
-      },
-    );
-  }
+  //   return ListView.builder(
+  //     padding: const EdgeInsets.all(16),
+  //     itemCount: _completedOrders.length,
+  //     itemBuilder: (context, index) {
+  //       final order = _completedOrders[index];
+  //       return _buildOrderCard(order, false);
+  //     },
+  //   );
+  // }
 
   Widget _buildOrderCard(Order order, bool isActive) {
     return Container(

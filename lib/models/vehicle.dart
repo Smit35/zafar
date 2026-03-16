@@ -8,7 +8,7 @@ class Vehicle {
   final int? manufactureYear;
   final String? color;
   final String fuelType;
-  final int? capacityKg;
+  final dynamic capacityKg;
   final String? vehiclePhoto;
   final String? gpsTrackerId;
   final bool status;
