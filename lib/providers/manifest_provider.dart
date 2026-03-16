@@ -165,23 +165,23 @@ class ManifestProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> generateOTP(int orderId) async {
+  Future<bool> verifyOTP(int orderId) async {
     _isLoading = true;
     _error = '';
     notifyListeners();
 
     try {
-      final response = await _apiService.generateOTP(orderId);
+      final response = await _apiService.verifyOTP(orderId);
       
       if (response['success']) {
         _isLoading = false;
         notifyListeners();
         return true;
       } else {
-        _error = response['message'] ?? 'Failed to generate OTP';
+        _error = response['message'] ?? 'Failed to verify OTP';
       }
     } catch (e) {
-      _error = 'Failed to generate OTP: ${e.toString()}';
+      _error = 'Failed to verify OTP: ${e.toString()}';
     }
 
     _isLoading = false;

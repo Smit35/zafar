@@ -21,7 +21,7 @@ class ManifestDetailsScreen extends StatefulWidget {
 class _ManifestDetailsScreenState extends State<ManifestDetailsScreen> {
   Manifest? _manifest;
   bool _isLoading = true;
-  Map<int, bool> _otpGeneratedOrders = {};
+  Map<int, bool> _otpVerifiedOrders = {};
 
   @override
   void initState() {
@@ -461,7 +461,7 @@ class _ManifestDetailsScreenState extends State<ManifestDetailsScreen> {
           ),
           if (_manifest!.status == 'out_for_delivery') ...[
             const SizedBox(height: AppSizes.paddingMedium),
-            _buildGenerateOTPButton(order),
+            _buildVerifyOTPButton(order),
           ],
         ],
       ),
@@ -500,15 +500,15 @@ class _ManifestDetailsScreenState extends State<ManifestDetailsScreen> {
     );
   }
 
-  Widget _buildGenerateOTPButton(order) {
-    final isOTPGenerated = _otpGeneratedOrders[order.id] ?? false;
+  Widget _buildVerifyOTPButton(order) {
+    final isOTPVerified = _otpVerifiedOrders[order.id] ?? false;
     final isDelivered = order.orderStatus == 'delivered';
     
     if (isDelivered) {
       return const SizedBox.shrink();
     }
     
-    if (isOTPGenerated) {
+    if (isOTPVerified) {
       return Container(
         padding: const EdgeInsets.all(AppSizes.paddingSmall),
         decoration: BoxDecoration(
@@ -525,7 +525,7 @@ class _ManifestDetailsScreenState extends State<ManifestDetailsScreen> {
             ),
             const SizedBox(width: 8),
             const Text(
-              'OTP Generated',
+              'OTP Verified',
               style: TextStyle(
                 color: AppColors.success,
                 fontSize: 12,
@@ -540,7 +540,7 @@ class _ManifestDetailsScreenState extends State<ManifestDetailsScreen> {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: () => _generateOTP(order.id),
+        onPressed: () => _verifyOTP(order.id),
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.secondary,
           foregroundColor: Colors.white,
@@ -556,7 +556,7 @@ class _ManifestDetailsScreenState extends State<ManifestDetailsScreen> {
             Icon(Icons.security, size: 16),
             SizedBox(width: 8),
             Text(
-              'Generate OTP',
+              'Verify OTP',
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
@@ -568,7 +568,7 @@ class _ManifestDetailsScreenState extends State<ManifestDetailsScreen> {
     );
   }
 
-  Future<void> _generateOTP(int orderId) async {
+  Future<void> _verifyOTP(int orderId) async {
     final manifestProvider = Provider.of<ManifestProvider>(context, listen: false);
     
     showDialog(
@@ -579,19 +579,19 @@ class _ManifestDetailsScreenState extends State<ManifestDetailsScreen> {
       ),
     );
 
-    final success = await manifestProvider.generateOTP(orderId);
+    final success = await manifestProvider.verifyOTP(orderId);
     
     if (mounted) {
       Navigator.of(context).pop();
       
       if (success) {
         setState(() {
-          _otpGeneratedOrders[orderId] = true;
+          _otpVerifiedOrders[orderId] = true;
         });
         
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('OTP generated successfully!'),
+            content: Text('OTP verified successfully!'),
             backgroundColor: AppColors.success,
           ),
         );
@@ -600,7 +600,7 @@ class _ManifestDetailsScreenState extends State<ManifestDetailsScreen> {
           SnackBar(
             content: Text(manifestProvider.error.isNotEmpty 
                 ? manifestProvider.error 
-                : 'Failed to generate OTP'),
+                : 'Failed to verify OTP'),
             backgroundColor: AppColors.error,
           ),
         );

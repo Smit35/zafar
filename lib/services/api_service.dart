@@ -552,10 +552,10 @@ class ApiService {
   }
 
   // Generate OTP for order
-  Future<Map<String, dynamic>> generateOTP(int orderId) async {
+  Future<Map<String, dynamic>> verifyOTP(int orderId) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl$apiVersion/driver/orders/$orderId/generate-otp'),
+        Uri.parse('$baseUrl$apiVersion/driver/orders/$orderId/verify-otp'),
         headers: _headers,
       );
 
@@ -564,7 +564,7 @@ class ApiService {
       if (response.statusCode == 200) {
         return {
           'success': true,
-          'message': data['message'] ?? 'OTP generated successfully',
+          'message': data['message'] ?? 'OTP verified successfully',
         };
       } else if (response.statusCode == 401) {
         return {
@@ -574,18 +574,18 @@ class ApiService {
       } else if (response.statusCode == 422) {
         return {
           'success': false,
-          'message': data['message'] ?? 'Cannot generate OTP for this order',
+          'message': data['message'] ?? 'Cannot verify OTP for this order',
         };
       } else {
         return {
           'success': false,
-          'message': data['message'] ?? 'Failed to generate OTP',
+          'message': data['message'] ?? 'Failed to verify OTP',
         };
       }
     } catch (e) {
       return {
         'success': false,
-        'message': 'Failed to generate OTP: ${e.toString()}',
+        'message': 'Failed to verify OTP: ${e.toString()}',
       };
     }
   }
