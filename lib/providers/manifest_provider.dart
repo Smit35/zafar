@@ -165,13 +165,13 @@ class ManifestProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> verifyOTP(int orderId) async {
+  Future<bool> verifyOTP(int orderId, String otp) async {
     _isLoading = true;
     _error = '';
     notifyListeners();
 
     try {
-      final response = await _apiService.verifyOTP(orderId);
+      final response = await _apiService.verifyOTP(orderId, otp);
       
       if (response['success']) {
         _isLoading = false;

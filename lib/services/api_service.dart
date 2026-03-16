@@ -551,12 +551,13 @@ class ApiService {
     }
   }
 
-  // Generate OTP for order
-  Future<Map<String, dynamic>> verifyOTP(int orderId) async {
+  // Verify OTP for order
+  Future<Map<String, dynamic>> verifyOTP(int orderId, String otp) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl$apiVersion/driver/orders/$orderId/verify-otp'),
         headers: _headers,
+        body: jsonEncode({'otp_code': otp}),
       );
 
       final data = jsonDecode(response.body);

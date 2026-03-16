@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../models/manifest.dart';
 import '../../providers/manifest_provider.dart';
+import '../../services/api_service.dart';
 import '../../utils/constants.dart';
 
 class ManifestDetailsScreen extends StatefulWidget {
@@ -569,22 +571,12 @@ class _ManifestDetailsScreenState extends State<ManifestDetailsScreen> {
   }
 
   Future<void> _verifyOTP(int orderId) async {
-    final manifestProvider = Provider.of<ManifestProvider>(context, listen: false);
-    
     showDialog(
       context: context,
-      barrierDismissible: false,
-      builder: (context) => const Center(
-        child: CircularProgressIndicator(),
-      ),
-    );
-
-    final success = await manifestProvider.verifyOTP(orderId);
-    
-    if (mounted) {
-      Navigator.of(context).pop();
-      
-      if (success) {
+      barrierDismissible: true,
+      builder: (context) => _OTPInputDialog(orderId: orderId),
+    ).then((result) {
+      if (result == true) {
         setState(() {
           _otpVerifiedOrders[orderId] = true;
         });
@@ -595,20 +587,265 @@ class _ManifestDetailsScreenState extends State<ManifestDetailsScreen> {
             backgroundColor: AppColors.success,
           ),
         );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(manifestProvider.error.isNotEmpty 
-                ? manifestProvider.error 
-                : 'Failed to verify OTP'),
-            backgroundColor: AppColors.error,
-          ),
-        );
       }
-    }
+    });
   }
 
   String _formatDate(DateTime date) {
     return '${date.day}/${date.month}/${date.year}';
+  }
+}
+
+class _OTPInputDialog extends StatefulWidget {
+  final int orderId;
+
+  const _OTPInputDialog({required this.orderId});
+
+  @override
+  State<_OTPInputDialog> createState() => _OTPInputDialogState();
+}
+
+class _OTPInputDialogState extends State<_OTPInputDialog> {
+  final List<TextEditingController> _controllers = 
+      List.generate(6, (index) => TextEditingController());
+  final List<FocusNode> _focusNodes = 
+      List.generate(6, (index) => FocusNode());
+  
+  bool _isLoading = false;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    // Auto-focus first box
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _focusNodes[0].requestFocus();
+    });
+  }
+
+  @override
+  void dispose() {
+    for (var controller in _controllers) {
+      controller.dispose();
+    }
+    for (var node in _focusNodes) {
+      node.dispose();
+    }
+    super.dispose();
+  }
+
+  String get _otp => _controllers.map((c) => c.text).join();
+  bool get _isOtpComplete => _otp.length == 6;
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSizes.paddingLarge),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Title
+            Text(
+              'Enter OTP',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: AppSizes.paddingSmall),
+            Text(
+              'Enter the 6-digit OTP provided by the outlet',
+              style: TextStyle(
+                fontSize: 14,
+                color: AppColors.textSecondary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            
+            const SizedBox(height: AppSizes.paddingLarge),
+            
+            // OTP Input boxes
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: List.generate(6, (index) => _buildOtpBox(index)),
+            ),
+            
+            // Error message
+            if (_errorMessage != null) ...[
+              const SizedBox(height: AppSizes.paddingMedium),
+              Text(
+                _errorMessage!,
+                style: TextStyle(
+                  color: AppColors.error,
+                  fontSize: 14,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+            
+            const SizedBox(height: AppSizes.paddingLarge),
+            
+            // Action buttons
+            Row(
+              children: [
+                Expanded(
+                  child: TextButton(
+                    onPressed: () => Navigator.of(context).pop(false),
+                    child: Text(
+                      'Cancel',
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: AppSizes.paddingMedium),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _isOtpComplete && !_isLoading ? _verifyOTP : null,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
+                      ),
+                    ),
+                    child: _isLoading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Text(
+                            'Verify',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOtpBox(int index) {
+    return Container(
+      width: 40,
+      height: 50,
+      decoration: BoxDecoration(
+        border: Border.all(
+          color: _focusNodes[index].hasFocus 
+              ? AppColors.primary 
+              : AppColors.border,
+          width: 2,
+        ),
+        borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
+        color: AppColors.surface,
+      ),
+      child: TextField(
+        controller: _controllers[index],
+        focusNode: _focusNodes[index],
+        textAlign: TextAlign.center,
+        keyboardType: TextInputType.number,
+        maxLength: 1,
+        style: const TextStyle(
+          fontSize: 24,
+          fontWeight: FontWeight.bold,
+          color: AppColors.textPrimary,
+        ),
+        inputFormatters: [
+          FilteringTextInputFormatter.digitsOnly,
+        ],
+        decoration: const InputDecoration(
+          counterText: '',
+          border: InputBorder.none,
+          contentPadding: EdgeInsets.zero,
+        ),
+        onChanged: (value) {
+          if (value.isNotEmpty) {
+            // Move to next box
+            if (index < 5) {
+              _focusNodes[index + 1].requestFocus();
+            } else {
+              _focusNodes[index].unfocus();
+              // Auto-verify when last digit is entered
+              if (_isOtpComplete) {
+                _verifyOTP();
+              }
+            }
+          } else if (value.isEmpty && index > 0) {
+            // Move to previous box on backspace
+            _focusNodes[index - 1].requestFocus();
+          }
+          setState(() {
+            _errorMessage = null; // Clear error when user types
+          });
+        },
+        onTap: () {
+          // Clear error when user starts typing
+          if (_errorMessage != null) {
+            setState(() {
+              _errorMessage = null;
+            });
+          }
+        },
+      ),
+    );
+  }
+
+  Future<void> _verifyOTP() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final apiService = ApiService();
+      final result = await apiService.verifyOTP(widget.orderId, _otp);
+
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+
+        if (result['success'] == true) {
+          Navigator.of(context).pop(true);
+        } else {
+          setState(() {
+            _errorMessage = result['message'] ?? 'Failed to verify OTP';
+          });
+          _clearOtpBoxes();
+          _focusNodes[0].requestFocus();
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = 'Network error. Please check your connection.';
+        });
+      }
+    }
+  }
+
+  void _clearOtpBoxes() {
+    for (var controller in _controllers) {
+      controller.clear();
+    }
+    setState(() {});
   }
 }
