@@ -840,6 +840,30 @@ class ApiService {
     }
   }
 
+  // Get outlet profile data
+  Future<Map<String, dynamic>> getOutletProfile() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl$apiVersion/outlet/profile'),
+        headers: _headers,
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return {
+          'success': true,
+          'data': data['data'],
+        };
+      } else if (response.statusCode == 401) {
+        return {'success': false, 'message': 'Session expired'};
+      } else {
+        return {'success': false, 'message': 'Failed to load profile'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
   // Mock data helper
   List<Order> _getMockOrders(String status) {
     // This would be replaced by actual API data
