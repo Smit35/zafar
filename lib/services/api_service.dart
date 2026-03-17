@@ -634,6 +634,212 @@ class ApiService {
     }
   }
 
+  // Outlet API Methods
+  
+  // Get outlet dashboard data
+  Future<Map<String, dynamic>> getOutletDashboard() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl$apiVersion/outlet/dashboard'),
+        headers: _headers,
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return {
+          'success': true,
+          'dashboard': data,
+        };
+      } else if (response.statusCode == 401) {
+        return {'success': false, 'message': 'Session expired'};
+      } else {
+        return {'success': false, 'message': 'Failed to load dashboard'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
+  // Get outlet orders
+  Future<Map<String, dynamic>> getOutletOrders({
+    String? status,
+    int page = 1,
+    int perPage = 20,
+  }) async {
+    try {
+      var url = '$baseUrl$apiVersion/outlet/orders?page=$page&per_page=$perPage';
+      if (status != null) {
+        url += '&status=$status';
+      }
+
+      final response = await http.get(
+        Uri.parse(url),
+        headers: _headers,
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return {
+          'success': true,
+          'orders': (data['orders'] ?? [])
+              .map<Order>((json) => Order.fromJson(json))
+              .toList(),
+          'meta': data['meta'] ?? {},
+        };
+      } else if (response.statusCode == 401) {
+        return {'success': false, 'message': 'Session expired'};
+      } else {
+        return {'success': false, 'message': 'Failed to load orders'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
+  // Update outlet order status (accept/reject/prepare/ready)
+  Future<Map<String, dynamic>> updateOutletOrderStatus(
+    String orderId,
+    String status, {
+    String? reason,
+    int? preparationTime,
+  }) async {
+    try {
+      final body = {
+        'status': status,
+        if (reason != null) 'reason': reason,
+        if (preparationTime != null) 'preparation_time': preparationTime,
+      };
+
+      final response = await http.put(
+        Uri.parse('$baseUrl$apiVersion/outlet/orders/$orderId/status'),
+        headers: _headers,
+        body: jsonEncode(body),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'message': data['message'] ?? 'Order status updated successfully',
+          'order': Order.fromJson(data['order']),
+        };
+      } else if (response.statusCode == 401) {
+        return {'success': false, 'message': 'Session expired'};
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to update order status',
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
+  // Get outlet menu items
+  Future<Map<String, dynamic>> getOutletMenu() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl$apiVersion/outlet/menu'),
+        headers: _headers,
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return {
+          'success': true,
+          'menu': data['menu'] ?? [],
+        };
+      } else if (response.statusCode == 401) {
+        return {'success': false, 'message': 'Session expired'};
+      } else {
+        return {'success': false, 'message': 'Failed to load menu'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
+  // Update menu item availability
+  Future<Map<String, dynamic>> updateMenuItemAvailability(
+    int itemId,
+    bool isAvailable,
+  ) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl$apiVersion/outlet/menu/$itemId/availability'),
+        headers: _headers,
+        body: jsonEncode({'is_available': isAvailable}),
+      );
+
+      if (response.statusCode == 200) {
+        return {'success': true, 'message': 'Menu item updated successfully'};
+      } else if (response.statusCode == 401) {
+        return {'success': false, 'message': 'Session expired'};
+      } else {
+        return {'success': false, 'message': 'Failed to update menu item'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
+  // Generate OTP for order delivery
+  Future<Map<String, dynamic>> generateDeliveryOTP(String orderId) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl$apiVersion/outlet/orders/$orderId/generate-otp'),
+        headers: _headers,
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'otp': data['otp'],
+          'message': 'OTP generated successfully',
+        };
+      } else if (response.statusCode == 401) {
+        return {'success': false, 'message': 'Session expired'};
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to generate OTP',
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
+  // Get outlet analytics/reports
+  Future<Map<String, dynamic>> getOutletAnalytics({
+    String? period = '7days',
+  }) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl$apiVersion/outlet/analytics?period=$period'),
+        headers: _headers,
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return {
+          'success': true,
+          'analytics': data,
+        };
+      } else if (response.statusCode == 401) {
+        return {'success': false, 'message': 'Session expired'};
+      } else {
+        return {'success': false, 'message': 'Failed to load analytics'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
   // Mock data helper
   List<Order> _getMockOrders(String status) {
     // This would be replaced by actual API data
