@@ -38,7 +38,7 @@ class _PlaceOrderScreenState extends State<PlaceOrderScreen> {
 
     if (mounted) {
       final cart = Provider.of<CartProvider>(context, listen: false);
-      
+
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (_) => OrderConfirmationScreen(
@@ -50,7 +50,7 @@ class _PlaceOrderScreenState extends State<PlaceOrderScreen> {
           ),
         ),
       );
-      
+
       cart.clearCart();
     }
   }
@@ -101,31 +101,35 @@ class _PlaceOrderScreenState extends State<PlaceOrderScreen> {
                                 ),
                               ),
                               const SizedBox(height: 12),
-                              ...cart.items.map((item) => Padding(
-                                padding: const EdgeInsets.only(bottom: 8),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        '${item.menuItem.name} x${item.quantity}',
-                                        style: const TextStyle(fontSize: 14),
+                              ...cart.items.map(
+                                (item) => Padding(
+                                  padding: const EdgeInsets.only(bottom: 8),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          '${item.menuItem.name} x${item.quantity}',
+                                          style: const TextStyle(fontSize: 14),
+                                        ),
                                       ),
-                                    ),
-                                    Text(
-                                      '₹${item.totalPrice.toStringAsFixed(0)}',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w500,
-                                        color: Colors.orange[600],
+                                      Text(
+                                        '₹${item.totalPrice.toStringAsFixed(0)}',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                          color: Colors.orange[600],
+                                        ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
-                              )),
+                              ),
                               const Divider(),
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   const Text(
                                     'Total Amount:',
@@ -183,7 +187,9 @@ class _PlaceOrderScreenState extends State<PlaceOrderScreen> {
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(8),
-                                    borderSide: BorderSide(color: Colors.orange[600]!),
+                                    borderSide: BorderSide(
+                                      color: Colors.orange[600]!,
+                                    ),
                                   ),
                                 ),
                                 validator: (value) {
@@ -205,7 +211,9 @@ class _PlaceOrderScreenState extends State<PlaceOrderScreen> {
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(8),
-                                    borderSide: BorderSide(color: Colors.orange[600]!),
+                                    borderSide: BorderSide(
+                                      color: Colors.orange[600]!,
+                                    ),
                                   ),
                                 ),
                                 validator: (value) {
@@ -224,13 +232,17 @@ class _PlaceOrderScreenState extends State<PlaceOrderScreen> {
                                 maxLines: 3,
                                 decoration: InputDecoration(
                                   labelText: 'Delivery Address',
-                                  prefixIcon: const Icon(Icons.location_on_outlined),
+                                  prefixIcon: const Icon(
+                                    Icons.location_on_outlined,
+                                  ),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(8),
-                                    borderSide: BorderSide(color: Colors.orange[600]!),
+                                    borderSide: BorderSide(
+                                      color: Colors.orange[600]!,
+                                    ),
                                   ),
                                 ),
                                 validator: (value) {

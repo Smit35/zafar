@@ -14,6 +14,13 @@ class Order {
   final String deliveryAddress;
   final String customerName;
   final String customerPhone;
+  final String? orderNumber;
+  final String? estimatedDeliveryTime;
+  final String? specialInstructions;
+  final double? subtotal;
+  final double? taxAmount;
+  final double? deliveryFee;
+  final double? discountAmount;
 
   Order({
     required this.id,
@@ -27,23 +34,37 @@ class Order {
     required this.deliveryAddress,
     required this.customerName,
     required this.customerPhone,
+    this.orderNumber,
+    this.estimatedDeliveryTime,
+    this.specialInstructions,
+    this.subtotal,
+    this.taxAmount,
+    this.deliveryFee,
+    this.discountAmount,
   });
 
   factory Order.fromJson(Map<String, dynamic> json) {
     return Order(
-      id: json['id'],
-      outletId: json['outletId'],
-      driverId: json['driverId'],
-      items: (json['items'] as List)
-          .map((item) => CartItem.fromJson(item))
-          .toList(),
-      totalAmount: json['totalAmount'].toDouble(),
-      status: _parseOrderStatus(json['status']),
-      paymentMethod: json['paymentMethod'],
-      createdAt: DateTime.parse(json['createdAt']),
-      deliveryAddress: json['deliveryAddress'],
-      customerName: json['customerName'],
-      customerPhone: json['customerPhone'],
+      id: json['id']?.toString() ?? '',
+      outletId: json['outletId']?.toString() ?? '',
+      driverId: json['driverId']?.toString(),
+      items: (json['items'] as List?)
+          ?.map((item) => CartItem.fromJson(item))
+          .toList() ?? [],
+      totalAmount: (json['totalAmount'] ?? 0).toDouble(),
+      status: _parseOrderStatus(json['status'] ?? 'active'),
+      paymentMethod: json['paymentMethod'] ?? 'COD',
+      createdAt: DateTime.tryParse(json['createdAt'] ?? '') ?? DateTime.now(),
+      deliveryAddress: json['deliveryAddress'] ?? '',
+      customerName: json['customerName'] ?? '',
+      customerPhone: json['customerPhone'] ?? '',
+      orderNumber: json['orderNumber']?.toString() ?? json['order_number']?.toString(),
+      estimatedDeliveryTime: json['estimatedDeliveryTime'] ?? json['estimated_delivery_time'],
+      specialInstructions: json['specialInstructions'] ?? json['special_instructions'],
+      subtotal: (json['subtotal'] ?? 0).toDouble(),
+      taxAmount: (json['taxAmount'] ?? json['tax_amount'] ?? 0).toDouble(),
+      deliveryFee: (json['deliveryFee'] ?? json['delivery_fee'] ?? 0).toDouble(),
+      discountAmount: (json['discountAmount'] ?? json['discount_amount'] ?? 0).toDouble(),
     );
   }
 
@@ -60,6 +81,13 @@ class Order {
       'deliveryAddress': deliveryAddress,
       'customerName': customerName,
       'customerPhone': customerPhone,
+      'orderNumber': orderNumber,
+      'estimatedDeliveryTime': estimatedDeliveryTime,
+      'specialInstructions': specialInstructions,
+      'subtotal': subtotal,
+      'taxAmount': taxAmount,
+      'deliveryFee': deliveryFee,
+      'discountAmount': discountAmount,
     };
   }
 

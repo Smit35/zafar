@@ -30,18 +30,12 @@ class CartScreen extends StatelessWidget {
                   const SizedBox(height: 16),
                   Text(
                     'Your cart is empty',
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.grey[600],
-                    ),
+                    style: TextStyle(fontSize: 18, color: Colors.grey[600]),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Add items to get started',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[500],
-                    ),
+                    style: TextStyle(fontSize: 14, color: Colors.grey[500]),
                   ),
                 ],
               ),
@@ -123,7 +117,8 @@ class CartScreen extends StatelessWidget {
                             Row(
                               children: [
                                 IconButton(
-                                  onPressed: () => cart.removeItem(cartItem.menuItem.id),
+                                  onPressed: () =>
+                                      cart.removeItem(cartItem.menuItem.id),
                                   icon: const Icon(Icons.remove_circle_outline),
                                   color: Colors.orange[600],
                                 ),
@@ -135,7 +130,8 @@ class CartScreen extends StatelessWidget {
                                   ),
                                 ),
                                 IconButton(
-                                  onPressed: () => cart.addItem(cartItem.menuItem),
+                                  onPressed: () =>
+                                      cart.addItem(cartItem.menuItem),
                                   icon: const Icon(Icons.add_circle_outline),
                                   color: Colors.orange[600],
                                 ),
