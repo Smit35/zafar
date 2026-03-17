@@ -25,7 +25,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
     _order = widget.order;
   }
 
-  Future<void> _updateOrderStatus(OrderStatus newStatus) async {
+/*  Future<void> _updateOrderStatus(OrderStatus newStatus) async {
     setState(() {
       _isLoading = true;
     });
@@ -75,7 +75,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
         backgroundColor: Colors.green,
       ),
     );
-  }
+  }*/
 
   @override
   Widget build(BuildContext context) {
@@ -118,7 +118,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      _buildStatusBadge(_order.status),
+                      // _buildStatusBadge(_order.status),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -267,8 +267,8 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Center(
-                            child: Text(
-                              item.menuItem.image,
+                            child: Text('',
+                              // item.menuItem.image,
                               style: const TextStyle(fontSize: 24),
                             ),
                           ),
@@ -278,15 +278,15 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                item.menuItem.name,
+                              Text('',
+                                // item.menuItem.name,
                                 style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
-                              Text(
-                                item.menuItem.description,
+                              Text('',
+                                //item.menuItem.description,
                                 style: TextStyle(
                                   fontSize: 14,
                                   color: Colors.grey[600],
@@ -295,8 +295,8 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                                 overflow: TextOverflow.ellipsis,
                               ),
                               const SizedBox(height: 4),
-                              Text(
-                                'Qty: ${item.quantity}',
+                              Text('',
+                                //'Qty: ${item.quantity}',
                                 style: TextStyle(
                                   fontSize: 14,
                                   color: Colors.grey[700],
@@ -305,8 +305,8 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                             ],
                           ),
                         ),
-                        Text(
-                          '₹${item.totalPrice.toStringAsFixed(0)}',
+                        Text('',
+                          //'₹${item.totalPrice.toStringAsFixed(0)}',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -340,7 +340,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                 ],
               ),
             ),
-            _buildActionButtons(),
+            // _buildActionButtons(),
             const SizedBox(height: 20),
           ],
         ),
@@ -348,7 +348,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
     );
   }
 
-  Widget _buildActionButtons() {
+/*  Widget _buildActionButtons() {
     if (_order.status == OrderStatus.completed || _order.status == OrderStatus.cancelled) {
       return const SizedBox.shrink();
     }
@@ -535,7 +535,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
         ),
       ),
     );
-  }
+  }*/
 
   Widget _buildDetailRow(String label, String value) {
     return Row(

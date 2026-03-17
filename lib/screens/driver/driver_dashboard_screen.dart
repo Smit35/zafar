@@ -19,122 +19,122 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen>
   late TabController _tabController;
   
   // Mock data for demonstration
-  final List<Order> _activeOrders = [
-    Order(
-      id: 'ORD001',
-      outletId: 'outlet_123',
-      driverId: 'driver_456',
-      items: [
-        CartItem(
-          menuItem: MenuItem(
-            id: '1',
-            name: 'Chicken Biryani',
-            description: 'Aromatic basmati rice with tender chicken pieces',
-            price: 299.0,
-            image: '🍛',
-            category: 'Main Course',
-          ),
-          quantity: 2,
-        ),
-        CartItem(
-          menuItem: MenuItem(
-            id: '3',
-            name: 'Chicken Tikka',
-            description: 'Grilled chicken marinated in spices',
-            price: 199.0,
-            image: '🍗',
-            category: 'Starter',
-          ),
-          quantity: 1,
-        ),
-      ],
-      totalAmount: 797.0,
-      status: OrderStatus.active,
-      paymentMethod: 'COD',
-      createdAt: DateTime.now().subtract(const Duration(minutes: 15)),
-      deliveryAddress: '123 Main Street, Downtown, City - 400001',
-      customerName: 'John Doe',
-      customerPhone: '+91 9876543210',
-    ),
-    Order(
-      id: 'ORD002',
-      outletId: 'outlet_123',
-      driverId: 'driver_456',
-      items: [
-        CartItem(
-          menuItem: MenuItem(
-            id: '2',
-            name: 'Paneer Butter Masala',
-            description: 'Creamy tomato curry with cottage cheese',
-            price: 249.0,
-            image: '🍛',
-            category: 'Main Course',
-          ),
-          quantity: 1,
-        ),
-      ],
-      totalAmount: 347.0,
-      status: OrderStatus.assigned,
-      paymentMethod: 'Online',
-      createdAt: DateTime.now().subtract(const Duration(minutes: 30)),
-      deliveryAddress: '456 Park Avenue, Uptown, City - 400002',
-      customerName: 'Jane Smith',
-      customerPhone: '+91 8765432109',
-    ),
-    Order(
-      id: 'ORD004',
-      outletId: 'outlet_123',
-      driverId: 'driver_456',
-      items: [
-        CartItem(
-          menuItem: MenuItem(
-            id: '5',
-            name: 'Pizza Margherita',
-            description: 'Fresh mozzarella, tomato sauce, basil',
-            price: 399.0,
-            image: '🍕',
-            category: 'Main Course',
-          ),
-          quantity: 1,
-        ),
-      ],
-      totalAmount: 399.0,
-      status: OrderStatus.delivered,
-      paymentMethod: 'COD',
-      createdAt: DateTime.now().subtract(const Duration(minutes: 45)),
-      deliveryAddress: '789 Oak Street, Midtown, City - 400003',
-      customerName: 'Alice Johnson',
-      customerPhone: '+91 7654321098',
-    ),
-  ];
-
-  final List<Order> _completedOrders = [
-    Order(
-      id: 'ORD003',
-      outletId: 'outlet_123',
-      driverId: 'driver_456',
-      items: [
-        CartItem(
-          menuItem: MenuItem(
-            id: '4',
-            name: 'Dal Makhani',
-            description: 'Rich and creamy black lentil curry',
-            price: 179.0,
-            image: '🍲',
-            category: 'Main Course',
-          ),
-          quantity: 1,
-        ),
-      ],
-      totalAmount: 179.0,
-      status: OrderStatus.completed,
-      paymentMethod: 'COD',
-      createdAt: DateTime.now().subtract(const Duration(hours: 2)),
-      deliveryAddress: '789 Oak Street, Midtown, City - 400003',
-      customerName: 'Mike Johnson',
-      customerPhone: '+91 7654321098',
-    ),
-  ];
+  // final List<Order> _activeOrders = [
+  //   Order(
+  //     id: 'ORD001',
+  //     outletId: 'outlet_123',
+  //     driverId: 'driver_456',
+  //     items: [
+  //       CartItem(
+  //         menuItem: MenuItem(
+  //           id: '1',
+  //           name: 'Chicken Biryani',
+  //           description: 'Aromatic basmati rice with tender chicken pieces',
+  //           price: 299.0,
+  //           image: '🍛',
+  //           category: 'Main Course',
+  //         ),
+  //         quantity: 2,
+  //       ),
+  //       CartItem(
+  //         menuItem: MenuItem(
+  //           id: '3',
+  //           name: 'Chicken Tikka',
+  //           description: 'Grilled chicken marinated in spices',
+  //           price: 199.0,
+  //           image: '🍗',
+  //           category: 'Starter',
+  //         ),
+  //         quantity: 1,
+  //       ),
+  //     ],
+  //     totalAmount: 797.0,
+  //     status: OrderStatus.active,
+  //     paymentMethod: 'COD',
+  //     createdAt: DateTime.now().subtract(const Duration(minutes: 15)),
+  //     deliveryAddress: '123 Main Street, Downtown, City - 400001',
+  //     customerName: 'John Doe',
+  //     customerPhone: '+91 9876543210',
+  //   ),
+  //   Order(
+  //     id: 'ORD002',
+  //     outletId: 'outlet_123',
+  //     driverId: 'driver_456',
+  //     items: [
+  //       CartItem(
+  //         menuItem: MenuItem(
+  //           id: '2',
+  //           name: 'Paneer Butter Masala',
+  //           description: 'Creamy tomato curry with cottage cheese',
+  //           price: 249.0,
+  //           image: '🍛',
+  //           category: 'Main Course',
+  //         ),
+  //         quantity: 1,
+  //       ),
+  //     ],
+  //     totalAmount: 347.0,
+  //     status: OrderStatus.assigned,
+  //     paymentMethod: 'Online',
+  //     createdAt: DateTime.now().subtract(const Duration(minutes: 30)),
+  //     deliveryAddress: '456 Park Avenue, Uptown, City - 400002',
+  //     customerName: 'Jane Smith',
+  //     customerPhone: '+91 8765432109',
+  //   ),
+  //   Order(
+  //     id: 'ORD004',
+  //     outletId: 'outlet_123',
+  //     driverId: 'driver_456',
+  //     items: [
+  //       CartItem(
+  //         menuItem: MenuItem(
+  //           id: '5',
+  //           name: 'Pizza Margherita',
+  //           description: 'Fresh mozzarella, tomato sauce, basil',
+  //           price: 399.0,
+  //           image: '🍕',
+  //           category: 'Main Course',
+  //         ),
+  //         quantity: 1,
+  //       ),
+  //     ],
+  //     totalAmount: 399.0,
+  //     status: OrderStatus.delivered,
+  //     paymentMethod: 'COD',
+  //     createdAt: DateTime.now().subtract(const Duration(minutes: 45)),
+  //     deliveryAddress: '789 Oak Street, Midtown, City - 400003',
+  //     customerName: 'Alice Johnson',
+  //     customerPhone: '+91 7654321098',
+  //   ),
+  // ];
+  //
+  // final List<Order> _completedOrders = [
+  //   Order(
+  //     id: 'ORD003',
+  //     outletId: 'outlet_123',
+  //     driverId: 'driver_456',
+  //     items: [
+  //       CartItem(
+  //         menuItem: MenuItem(
+  //           id: '4',
+  //           name: 'Dal Makhani',
+  //           description: 'Rich and creamy black lentil curry',
+  //           price: 179.0,
+  //           image: '🍲',
+  //           category: 'Main Course',
+  //         ),
+  //         quantity: 1,
+  //       ),
+  //     ],
+  //     totalAmount: 179.0,
+  //     status: OrderStatus.completed,
+  //     paymentMethod: 'COD',
+  //     createdAt: DateTime.now().subtract(const Duration(hours: 2)),
+  //     deliveryAddress: '789 Oak Street, Midtown, City - 400003',
+  //     customerName: 'Mike Johnson',
+  //     customerPhone: '+91 7654321098',
+  //   ),
+  // ];
 
   @override
   void initState() {
@@ -193,15 +193,15 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen>
       body: TabBarView(
         controller: _tabController,
         children: [
-          _buildNewOrdersList(),
-          _buildActiveOrdersList(),
+          // _buildNewOrdersList(),
+          // _buildActiveOrdersList(),
           // _buildCompletedOrdersList(),
         ],
       ),
     );
   }
 
-  Widget _buildNewOrdersList() {
+/*  Widget _buildNewOrdersList() {
     // Filter orders that are assigned but not yet active
     final newOrders = _activeOrders.where((order) => order.status == OrderStatus.assigned).toList();
     
@@ -291,7 +291,7 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen>
         return _buildOrderCard(order, true);
       },
     );
-  }
+  }*/
 
   // Commented out completed orders tab
   // Widget _buildCompletedOrdersList() {
@@ -359,16 +359,16 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen>
                 order: order,
                 onStatusUpdate: isActive ? (updatedOrder) {
                   setState(() {
-                    if (updatedOrder.status == OrderStatus.completed) {
-                      _activeOrders.removeWhere((o) => o.id == order.id);
-                      _completedOrders.insert(0, updatedOrder);
-                    } else {
-                      // Update the order in active orders list
-                      final index = _activeOrders.indexWhere((o) => o.id == order.id);
-                      if (index != -1) {
-                        _activeOrders[index] = updatedOrder;
-                      }
-                    }
+                    // if (updatedOrder.status == OrderStatus.completed) {
+                    //   _activeOrders.removeWhere((o) => o.id == order.id);
+                    //   _completedOrders.insert(0, updatedOrder);
+                    // } else {
+                    //   // Update the order in active orders list
+                    //   final index = _activeOrders.indexWhere((o) => o.id == order.id);
+                    //   if (index != -1) {
+                    //     _activeOrders[index] = updatedOrder;
+                    //   }
+                    // }
                   });
                 } : null,
               ),
@@ -391,7 +391,7 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen>
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  _buildStatusBadge(order.status, isActive),
+                  // _buildStatusBadge(order.status, isActive),
                 ],
               ),
               const SizedBox(height: 8),
@@ -519,7 +519,7 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen>
     );
   }
 
-  Widget _buildStatusBadge(OrderStatus status, bool isActive) {
+ /* Widget _buildStatusBadge(OrderStatus status, bool isActive) {
     Color backgroundColor;
     Color textColor;
     String text;
@@ -570,7 +570,7 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen>
         ),
       ),
     );
-  }
+  }*/
 
   String _getTimeAgo(DateTime dateTime) {
     final now = DateTime.now();

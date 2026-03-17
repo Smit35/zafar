@@ -193,26 +193,26 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
 
   Widget _buildOrderStatus() {
     Color statusColor = Colors.grey;
-    String statusText = _order.status.name.toUpperCase();
+    String statusText = _order.status.toUpperCase();
     IconData statusIcon = Icons.receipt;
 
     switch (_order.status) {
-      case OrderStatus.assigned:
+      case 'NEW ORDER'://OrderStatus.assigned:
         statusColor = Colors.orange;
         statusText = 'NEW ORDER';
         statusIcon = Icons.notifications;
         break;
-      case OrderStatus.active:
+      case 'NEW ORDER'://OrderStatus.active:
         statusColor = Colors.blue;
         statusText = 'PREPARING';
         statusIcon = Icons.restaurant;
         break;
-      case OrderStatus.delivered:
+      case 'NEW ORDER'://OrderStatus.delivered:
         statusColor = Colors.green;
         statusText = 'COMPLETED';
         statusIcon = Icons.check_circle;
         break;
-      case OrderStatus.cancelled:
+      case 'NEW ORDER'://OrderStatus.cancelled:
         statusColor = Colors.red;
         statusText = 'CANCELLED';
         statusIcon = Icons.cancel;
@@ -263,11 +263,11 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                   'Order placed: ${_formatDateTime(_order.createdAt)}',
                   style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                 ),
-                if (_order.estimatedDeliveryTime != null)
-                  Text(
-                    'Estimated delivery: ${_order.estimatedDeliveryTime}',
-                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                  ),
+                // if (_order.estimatedDeliveryTime != null)
+                //   Text(
+                //     'Estimated delivery: ${_order.estimatedDeliveryTime}',
+                //     style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                //   ),
               ],
             ),
           ),
@@ -431,20 +431,20 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
             'Subtotal',
             '₹${_order.subtotal?.toStringAsFixed(0) ?? "0"}',
           ),
-          _buildSummaryRow(
-            'Tax',
-            '₹${_order.taxAmount?.toStringAsFixed(0) ?? "0"}',
-          ),
-          _buildSummaryRow(
-            'Delivery Fee',
-            '₹${_order.deliveryFee?.toStringAsFixed(0) ?? "0"}',
-          ),
-          if (_order.discountAmount != null && _order.discountAmount! > 0)
-            _buildSummaryRow(
-              'Discount',
-              '-₹${_order.discountAmount!.toStringAsFixed(0)}',
-              isDiscount: true,
-            ),
+          // _buildSummaryRow(
+          //   'Tax',
+          //   '₹${_order.taxAmount?.toStringAsFixed(0) ?? "0"}',
+          // ),
+          // _buildSummaryRow(
+          //   'Delivery Fee',
+          //   '₹${_order.deliveryFee?.toStringAsFixed(0) ?? "0"}',
+          // ),
+          // if (_order.discountAmount != null && _order.discountAmount! > 0)
+          //   _buildSummaryRow(
+          //     'Discount',
+          //     '-₹${_order.discountAmount!.toStringAsFixed(0)}',
+          //     isDiscount: true,
+          //   ),
           const Divider(),
           _buildSummaryRow(
             'Total',
@@ -538,57 +538,57 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
 
   List<Widget> _getActionButtons() {
     switch (_order.status) {
-      case OrderStatus.assigned:
-        return [
-          Expanded(
-            child: OutlinedButton(
-              onPressed: _isLoading ? null : () => _showRejectDialog(),
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: Colors.red),
-                foregroundColor: Colors.red,
-              ),
-              child: const Text('Reject'),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            flex: 2,
-            child: ElevatedButton(
-              onPressed: _isLoading ? null : () => _showAcceptDialog(),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('Accept Order'),
-            ),
-          ),
-        ];
-      case OrderStatus.active:
-        return [
-          Expanded(
-            child: ElevatedButton(
-              onPressed: _isLoading ? null : () => _updateOrderStatus('ready'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange[600],
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('Mark as Ready'),
-            ),
-          ),
-        ];
-      case OrderStatus.delivered:
-        return [
-          Expanded(
-            child: ElevatedButton(
-              onPressed: _isLoading ? null : _generateOTP,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('Generate Delivery OTP'),
-            ),
-          ),
-        ];
+      // case OrderStatus.assigned:
+      //   return [
+      //     Expanded(
+      //       child: OutlinedButton(
+      //         onPressed: _isLoading ? null : () => _showRejectDialog(),
+      //         style: OutlinedButton.styleFrom(
+      //           side: const BorderSide(color: Colors.red),
+      //           foregroundColor: Colors.red,
+      //         ),
+      //         child: const Text('Reject'),
+      //       ),
+      //     ),
+      //     const SizedBox(width: 12),
+      //     Expanded(
+      //       flex: 2,
+      //       child: ElevatedButton(
+      //         onPressed: _isLoading ? null : () => _showAcceptDialog(),
+      //         style: ElevatedButton.styleFrom(
+      //           backgroundColor: Colors.green,
+      //           foregroundColor: Colors.white,
+      //         ),
+      //         child: const Text('Accept Order'),
+      //       ),
+      //     ),
+      //   ];
+      // case OrderStatus.active:
+      //   return [
+      //     Expanded(
+      //       child: ElevatedButton(
+      //         onPressed: _isLoading ? null : () => _updateOrderStatus('ready'),
+      //         style: ElevatedButton.styleFrom(
+      //           backgroundColor: Colors.orange[600],
+      //           foregroundColor: Colors.white,
+      //         ),
+      //         child: const Text('Mark as Ready'),
+      //       ),
+      //     ),
+      //   ];
+      // case OrderStatus.delivered:
+      //   return [
+      //     Expanded(
+      //       child: ElevatedButton(
+      //         onPressed: _isLoading ? null : _generateOTP,
+      //         style: ElevatedButton.styleFrom(
+      //           backgroundColor: Colors.blue,
+      //           foregroundColor: Colors.white,
+      //         ),
+      //         child: const Text('Generate Delivery OTP'),
+      //       ),
+      //     ),
+      //   ];
       default:
         return [];
     }

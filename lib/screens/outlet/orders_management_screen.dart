@@ -398,8 +398,8 @@ class _OrdersManagementScreenState extends State<OrdersManagementScreen>
                           padding: const EdgeInsets.symmetric(vertical: 2),
                           child: Row(
                             children: [
-                              Text(
-                                '${item.quantity}x',
+                              Text('',
+                                // '${item.quantity}x',
                                 style: const TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w500,
@@ -407,13 +407,13 @@ class _OrdersManagementScreenState extends State<OrdersManagementScreen>
                               ),
                               const SizedBox(width: 8),
                               Expanded(
-                                child: Text(
-                                  item.menuItem?.name ?? 'Item',
+                                child: Text('',
+                                  // item.menuItem?.name ?? 'Item',
                                   style: const TextStyle(fontSize: 12),
                                 ),
                               ),
-                              Text(
-                                '₹${item.menuItem?.price?.toStringAsFixed(0) ?? "0"}',
+                              Text('',
+                                // '₹${item.menuItem?.price?.toStringAsFixed(0) ?? "0"}',
                                 style: const TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w500,

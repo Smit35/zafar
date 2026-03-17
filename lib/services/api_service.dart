@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/order.dart';
-import '../models/cart_item.dart';
-import '../models/menu_item.dart';
+// import '../models/cart_item.dart'; // Commented out - unused import
+// import '../models/menu_item.dart'; // Commented out - unused import
 import '../models/driver.dart';
 import '../models/manifest.dart';
 import '../models/outlet.dart';
@@ -477,33 +477,17 @@ class ApiService {
   }
 
   // Update order status (generic method for non-delivery status updates)
-  Future<bool> updateOrderStatus(String orderId, OrderStatus status) async {
+  Future<bool> updateOrderStatus(String orderId, String status) async {
     try {
       final response = await http.patch(
         Uri.parse('$baseUrl$apiVersion/driver/orders/$orderId/status'),
         headers: _headers,
-        body: jsonEncode({'status': _orderStatusToString(status)}),
+        body: jsonEncode({'status': status}),
       );
 
       return response.statusCode == 200;
     } catch (e) {
       return false;
-    }
-  }
-
-  // Helper method to convert OrderStatus enum to string
-  String _orderStatusToString(OrderStatus status) {
-    switch (status) {
-      case OrderStatus.assigned:
-        return 'assigned';
-      case OrderStatus.active:
-        return 'active';
-      case OrderStatus.delivered:
-        return 'delivered';
-      case OrderStatus.completed:
-        return 'completed';
-      case OrderStatus.cancelled:
-        return 'cancelled';
     }
   }
 
@@ -663,6 +647,8 @@ class ApiService {
   // Get outlet orders
   Future<Map<String, dynamic>> getOutletOrders({
     String? status,
+    String? dateFrom,
+    String? dateTo,
     int page = 1,
     int perPage = 20,
   }) async {
@@ -670,6 +656,12 @@ class ApiService {
       var url = '$baseUrl$apiVersion/outlet/orders?page=$page&per_page=$perPage';
       if (status != null) {
         url += '&status=$status';
+      }
+      if (dateFrom != null) {
+        url += '&date_from=$dateFrom';
+      }
+      if (dateTo != null) {
+        url += '&date_to=$dateTo';
       }
 
       final response = await http.get(
@@ -681,7 +673,7 @@ class ApiService {
         final data = jsonDecode(response.body);
         return {
           'success': true,
-          'orders': (data['orders'] ?? [])
+          'orders': (data['data'] ?? [])
               .map<Order>((json) => Order.fromJson(json))
               .toList(),
           'meta': data['meta'] ?? {},
@@ -864,24 +856,11 @@ class ApiService {
     }
   }
 
-  // Mock data helper
-  List<Order> _getMockOrders(String status) {
-    // This would be replaced by actual API data
-    final mockOrders = <Order>[
-      // Add mock orders here if needed
-    ];
-
-    return mockOrders.where((order) {
-      switch (status) {
-        case 'active':
-          return order.status == OrderStatus.assigned ||
-              order.status == OrderStatus.active;
-        case 'completed':
-          return order.status == OrderStatus.completed ||
-              order.status == OrderStatus.delivered;
-        default:
-          return true;
-      }
-    }).toList();
-  }
+  // Commented out - unused mock data helper
+  // List<Order> _getMockOrders(String status) {
+  //   final mockOrders = <Order>[];
+  //   return mockOrders.where((order) {
+  //     // Filter logic here
+  //   }).toList();
+  // }
 }

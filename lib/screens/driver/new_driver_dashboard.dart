@@ -549,7 +549,7 @@ class _NewDriverDashboardState extends State<NewDriverDashboard>
     );
   }
 
-  void _navigateToOrderDetails(Order order) {
+  /*void _navigateToOrderDetails(Order order) {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => EnhancedOrderDetails(
@@ -561,7 +561,7 @@ class _NewDriverDashboardState extends State<NewDriverDashboard>
         ),
       ),
     );
-  }
+  }*/
 
   void _navigateToManifestDetails(int manifestId) {
     Navigator.of(context).push(
@@ -577,7 +577,7 @@ class _NewDriverDashboardState extends State<NewDriverDashboard>
     );
   }
 
-  void _acceptOrder(Order order) async {
+/*  void _acceptOrder(Order order) async {
     final orderProvider = Provider.of<OrderProvider>(context, listen: false);
     final success = await orderProvider.acceptOrder(order.id);
     
@@ -596,7 +596,7 @@ class _NewDriverDashboardState extends State<NewDriverDashboard>
         ),
       );
     }
-  }
+  }*/
 
   void _startDelivery(int manifestId) async {
     final manifestProvider = Provider.of<ManifestProvider>(context, listen: false);

@@ -62,7 +62,7 @@ class _EnhancedOrderDetailsState extends State<EnhancedOrderDetails> {
           ],
         ),
       ),
-      bottomNavigationBar: _buildActionButtons(),
+      // bottomNavigationBar: _buildActionButtons(),
     );
   }
 
@@ -70,30 +70,30 @@ class _EnhancedOrderDetailsState extends State<EnhancedOrderDetails> {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppSizes.paddingLarge),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: _getStatusGradient(_currentOrder.status),
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-      ),
+      // decoration: BoxDecoration(
+      //   gradient: LinearGradient(
+      //     colors: _getStatusGradient(_currentOrder.status),
+      //     begin: Alignment.topLeft,
+      //     end: Alignment.bottomRight,
+      //   ),
+      //   borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+      // ),
       child: Column(
         children: [
-          Icon(
-            _getStatusIcon(_currentOrder.status),
-            size: 48,
-            color: Colors.white,
-          ),
+          // Icon(
+          //   _getStatusIcon(_currentOrder.status),
+          //   size: 48,
+          //   color: Colors.white,
+          // ),
           const SizedBox(height: AppSizes.paddingSmall),
-          Text(
-            _getStatusText(_currentOrder.status),
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          // Text(
+          //   _getStatusText(_currentOrder.status),
+          //   style: const TextStyle(
+          //     color: Colors.white,
+          //     fontSize: 20,
+          //     fontWeight: FontWeight.bold,
+          //   ),
+          // ),
           const SizedBox(height: 4),
           Text(
             'Order placed ${_getTimeAgo(_currentOrder.createdAt)}',
@@ -155,8 +155,8 @@ class _EnhancedOrderDetailsState extends State<EnhancedOrderDetails> {
                     borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
                   ),
                   child: Center(
-                    child: Text(
-                      item.menuItem.image,
+                    child: Text('',
+                      // item.menuItem.image,
                       style: const TextStyle(fontSize: 18),
                     ),
                   ),
@@ -166,15 +166,15 @@ class _EnhancedOrderDetailsState extends State<EnhancedOrderDetails> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        item.menuItem.name,
+                      Text('',
+                        // item.menuItem.name,
                         style: const TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: 14,
                         ),
                       ),
-                      Text(
-                        '₹${item.menuItem.price.toStringAsFixed(0)} × ${item.quantity}',
+                      Text('',
+                        // '₹${item.menuItem.price.toStringAsFixed(0)} × ${item.quantity}',
                         style: const TextStyle(
                           color: AppColors.textSecondary,
                           fontSize: 12,
@@ -183,8 +183,8 @@ class _EnhancedOrderDetailsState extends State<EnhancedOrderDetails> {
                     ],
                   ),
                 ),
-                Text(
-                  '₹${(item.menuItem.price * item.quantity).toStringAsFixed(0)}',
+                Text('',
+                  // '₹${(item.menuItem.price * item.quantity).toStringAsFixed(0)}',
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     color: AppColors.primary,
@@ -389,7 +389,7 @@ class _EnhancedOrderDetailsState extends State<EnhancedOrderDetails> {
     return content;
   }
 
-  Widget _buildActionButtons() {
+  /*Widget _buildActionButtons() {
     if (_currentOrder.status == OrderStatus.completed ||
         _currentOrder.status == OrderStatus.cancelled) {
       return const SizedBox.shrink();
@@ -397,7 +397,7 @@ class _EnhancedOrderDetailsState extends State<EnhancedOrderDetails> {
 
     List<Widget> buttons = [];
 
-    switch (_currentOrder.status) {
+   *//* switch (_currentOrder.status) {
       case OrderStatus.assigned:
         buttons = [
           Expanded(
@@ -481,7 +481,7 @@ class _EnhancedOrderDetailsState extends State<EnhancedOrderDetails> {
         break;
       default:
         break;
-    }
+    }*//*
 
     if (buttons.isEmpty) return const SizedBox.shrink();
 
@@ -497,9 +497,9 @@ class _EnhancedOrderDetailsState extends State<EnhancedOrderDetails> {
         child: Row(children: buttons),
       ),
     );
-  }
+  }*/
 
-  void _updateOrderStatus(OrderStatus newStatus) {
+  /*void _updateOrderStatus(OrderStatus newStatus) {
     setState(() {
       _currentOrder = Order(
         id: _currentOrder.id,
@@ -548,7 +548,7 @@ class _EnhancedOrderDetailsState extends State<EnhancedOrderDetails> {
     if (newStatus == OrderStatus.completed || newStatus == OrderStatus.cancelled) {
       Navigator.of(context).pop();
     }
-  }
+  }*/
 
   void _navigateToOtpEntry() {
     Navigator.of(context).push(
@@ -572,7 +572,7 @@ class _EnhancedOrderDetailsState extends State<EnhancedOrderDetails> {
     }
   }
 
-  List<Color> _getStatusGradient(OrderStatus status) {
+/*  List<Color> _getStatusGradient(OrderStatus status) {
     switch (status) {
       case OrderStatus.assigned:
         return [AppColors.warning, AppColors.warning.withValues(alpha: 0.8)];
@@ -615,7 +615,7 @@ class _EnhancedOrderDetailsState extends State<EnhancedOrderDetails> {
       case OrderStatus.cancelled:
         return 'Cancelled';
     }
-  }
+  }*/
 
   String _getTimeAgo(DateTime dateTime) {
     final now = DateTime.now();

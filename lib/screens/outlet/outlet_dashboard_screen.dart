@@ -570,22 +570,22 @@ class _OutletDashboardScreenState extends State<OutletDashboardScreen> {
 
   Widget _buildOrderItem(Order order) {
     Color statusColor = Colors.grey;
-    String statusText = order.status.name.toUpperCase();
+    String statusText = order.status.toUpperCase();
 
     switch (order.status) {
-      case OrderStatus.assigned:
+      case "NEW"://OrderStatus.assigned:
         statusColor = Colors.orange;
         statusText = 'NEW';
         break;
-      case OrderStatus.active:
+      case "PREPARING"://OrderStatus.active:
         statusColor = Colors.blue;
         statusText = 'PREPARING';
         break;
-      case OrderStatus.delivered:
+      case "COMPLETED"://OrderStatus.delivered:
         statusColor = Colors.green;
         statusText = 'COMPLETED';
         break;
-      case OrderStatus.cancelled:
+      case "CANCELLED"://OrderStatus.cancelled:
         statusColor = Colors.red;
         statusText = 'CANCELLED';
         break;

@@ -28,7 +28,7 @@ class OrderCard extends StatelessWidget {
         border: Border.all(color: AppColors.border, width: 0.5),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withAlpha(10),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -74,35 +74,41 @@ class OrderCard extends StatelessWidget {
   }
 
   Widget _buildStatusBadge() {
-    Color backgroundColor;
-    Color textColor;
-    String text;
+    Color backgroundColor = Colors.grey.withAlpha(26);
+    Color textColor = Colors.grey;
+    String text = 'Unknown';
 
-    switch (order.status) {
-      case OrderStatus.assigned:
-        backgroundColor = AppColors.warning.withOpacity(0.1);
-        textColor = AppColors.warning;
+    // Updated to use string status instead of enum
+    switch (order.status.toLowerCase()) {
+      case 'assigned':
+        backgroundColor = Colors.orange.withAlpha(26);
+        textColor = Colors.orange;
         text = 'New';
         break;
-      case OrderStatus.active:
-        backgroundColor = AppColors.info.withOpacity(0.1);
-        textColor = AppColors.info;
+      case 'active':
+        backgroundColor = Colors.blue.withAlpha(26);
+        textColor = Colors.blue;
         text = 'Active';
         break;
-      case OrderStatus.delivered:
-        backgroundColor = AppColors.secondary.withOpacity(0.1);
-        textColor = AppColors.secondary;
+      case 'delivered':
+        backgroundColor = Colors.green.withAlpha(26);
+        textColor = Colors.green;
         text = 'Delivered';
         break;
-      case OrderStatus.completed:
-        backgroundColor = AppColors.success.withOpacity(0.1);
-        textColor = AppColors.success;
+      case 'completed':
+        backgroundColor = Colors.green.withAlpha(26);
+        textColor = Colors.green;
         text = 'Completed';
         break;
-      case OrderStatus.cancelled:
-        backgroundColor = AppColors.error.withOpacity(0.1);
-        textColor = AppColors.error;
+      case 'cancelled':
+        backgroundColor = Colors.red.withAlpha(26);
+        textColor = Colors.red;
         text = 'Cancelled';
+        break;
+      default:
+        backgroundColor = Colors.grey.withAlpha(26);
+        textColor = Colors.grey;
+        text = order.status;
         break;
     }
 
@@ -153,7 +159,7 @@ class OrderCard extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: AppColors.success.withOpacity(0.1),
+                  color: AppColors.success.withAlpha(26),
                   borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
                 ),
                 child: const Icon(
@@ -213,8 +219,8 @@ class OrderCard extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
                     color: order.paymentMethod == 'COD'
-                        ? AppColors.warning.withOpacity(0.1)
-                        : AppColors.success.withOpacity(0.1),
+                        ? AppColors.warning.withAlpha(26)
+                        : AppColors.success.withAlpha(26),
                     borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
                   ),
                   child: Text(
@@ -258,20 +264,21 @@ class OrderCard extends StatelessWidget {
   }
 
   Widget _buildOrderActions() {
-    if (order.status == OrderStatus.assigned && onAccept != null) {
+    // Updated to use string status instead of enum
+    if (order.status.toLowerCase() == 'assigned' && onAccept != null) {
       return Row(
         children: [
           Expanded(
             child: OutlinedButton(
               onPressed: onReject,
               style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: AppColors.error),
-                foregroundColor: AppColors.error,
+                side: const BorderSide(color: Colors.red),
+                foregroundColor: Colors.red,
               ),
               child: const Text('Decline'),
             ),
           ),
-          const SizedBox(width: AppSizes.paddingMedium),
+          const SizedBox(width: 16),
           Expanded(
             child: ElevatedButton(
               onPressed: onAccept,
