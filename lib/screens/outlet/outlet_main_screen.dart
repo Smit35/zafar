@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 import 'outlet_home_tab.dart';
 import 'outlet_catalog_screen.dart';
 import 'outlet_orders_tab.dart';
@@ -15,6 +17,8 @@ class OutletMainScreen extends StatefulWidget {
 
 class _OutletMainScreenState extends State<OutletMainScreen> {
   int _selectedIndex = 0;
+  String _outletName = 'Outlet 1';
+  String _ownerName = 'Owner';
 
   final List<Widget> _screens = [
     const OutletHomeTab(),
@@ -31,6 +35,30 @@ class _OutletMainScreenState extends State<OutletMainScreen> {
     'Stock',
     'Wallet',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadOutletData();
+  }
+
+  Future<void> _loadOutletData() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final outletData = prefs.getString('outlet_data');
+      if (outletData != null) {
+        final data = jsonDecode(outletData);
+        if (mounted) {
+          setState(() {
+            _outletName = data['outlet_name'] ?? 'Outlet 1';
+            _ownerName = data['owner_name'] ?? 'Owner';
+          });
+        }
+      }
+    } catch (e) {
+      // Error loading outlet data - using default values
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

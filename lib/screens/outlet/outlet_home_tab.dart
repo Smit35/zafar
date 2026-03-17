@@ -395,7 +395,7 @@ class _OutletHomeTabState extends State<OutletHomeTab> {
         statusColor = Colors.blue;
     }
 
-    final timeAgo = _formatTimeAgo(order.createdAt);
+    final dateTime = _formatDateTime(order.createdAt);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -435,17 +435,16 @@ class _OutletHomeTabState extends State<OutletHomeTab> {
               ),
             ],
           ),
-          const SizedBox(height: 4),
-          Text(
-            timeAgo,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey[600],
-            ),
-          ),
           const SizedBox(height: 8),
           Row(
             children: [
+              Text(
+                dateTime,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                ),
+              ),
               const Spacer(),
               Container(
                 padding: const EdgeInsets.symmetric(
@@ -470,6 +469,11 @@ class _OutletHomeTabState extends State<OutletHomeTab> {
         ],
       ),
     );
+  }
+
+  String _formatDateTime(DateTime dateTime) {
+    // Format: "Mar 17, 2026 at 12:54 PM"
+    return DateFormat('MMM dd, yyyy \'at\' h:mm a').format(dateTime);
   }
 
   String _formatTimeAgo(DateTime dateTime) {
