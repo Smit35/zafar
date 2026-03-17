@@ -5,9 +5,11 @@ import '../models/cart_item.dart';
 import '../models/menu_item.dart';
 import '../models/driver.dart';
 import '../models/manifest.dart';
+import '../models/outlet.dart';
 
 class ApiService {
-  static const String baseUrl = 'https://zafs.copytrading.cloud';//'https://zafar-api.copytrading.cloud';
+  static const String baseUrl =
+      'https://zafs.copytrading.cloud'; //'https://zafar-api.copytrading.cloud';
   static const String apiVersion = '/api/v1';
 
   // Singleton pattern
@@ -16,7 +18,7 @@ class ApiService {
   ApiService._internal();
 
   String? _token;
-  
+
   void setToken(String token) {
     _token = token;
   }
@@ -31,16 +33,16 @@ class ApiService {
     if (_token != null) 'Authorization': 'Bearer $_token',
   };
 
-  // Authentication
-  Future<Map<String, dynamic>> login(String email, String password) async {
+  // Authentication - Driver Login
+  Future<Map<String, dynamic>> driverLogin(
+    String email,
+    String password,
+  ) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl$apiVersion/driver/login'),
         headers: _headers,
-        body: jsonEncode({
-          'email': email.trim(),
-          'password': password,
-        }),
+        body: jsonEncode({'email': email.trim(), 'password': password}),
       );
 
       final data = jsonDecode(response.body);
@@ -75,6 +77,55 @@ class ApiService {
     }
   }
 
+  // Authentication - Outlet Login
+  Future<Map<String, dynamic>> outletLogin(
+    String email,
+    String password,
+  ) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl$apiVersion/outlet/login'),
+        headers: _headers,
+        body: jsonEncode({'email': email.trim(), 'password': password}),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'token': data['token'],
+          'outlet': Outlet.fromJson(data['outlet']),
+        };
+      } else if (response.statusCode == 401) {
+        return {
+          'success': false,
+          'message': 'Invalid email or password. Please try again.',
+        };
+      } else if (response.statusCode == 429) {
+        return {
+          'success': false,
+          'message': 'Too many failed attempts. Account locked for 15 minutes.',
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Login failed. Please try again.',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'No internet connection. Please check your network.',
+      };
+    }
+  }
+
+  // Authentication - Generic Login (backward compatibility)
+  Future<Map<String, dynamic>> login(String email, String password) async {
+    return driverLogin(email, password);
+  }
+
   // Verify current auth token
   Future<Map<String, dynamic>> verifyToken() async {
     try {
@@ -85,15 +136,9 @@ class ApiService {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        return {
-          'success': true,
-          'user': data['user'],
-        };
+        return {'success': true, 'user': data['user']};
       } else {
-        return {
-          'success': false,
-          'message': 'Session expired',
-        };
+        return {'success': false, 'message': 'Session expired'};
       }
     } catch (e) {
       return {
@@ -110,7 +155,7 @@ class ApiService {
         Uri.parse('$baseUrl$apiVersion/auth/logout'),
         headers: _headers,
       );
-      
+
       clearToken();
       return response.statusCode == 200;
     } catch (e) {
@@ -169,10 +214,7 @@ class ApiService {
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
-        return {
-          'success': true,
-          'message': 'Password changed successfully.',
-        };
+        return {'success': true, 'message': 'Password changed successfully.'};
       } else if (response.statusCode == 422) {
         return {
           'success': false,
@@ -200,7 +242,9 @@ class ApiService {
   }) async {
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl$apiVersion/driver/orders?tab=$tab&page=$page&per_page=$perPage'),
+        Uri.parse(
+          '$baseUrl$apiVersion/driver/orders?tab=$tab&page=$page&per_page=$perPage',
+        ),
         headers: _headers,
       );
 
@@ -208,7 +252,9 @@ class ApiService {
         final data = jsonDecode(response.body);
         return {
           'success': true,
-          'orders': (data['data'] as List).map((json) => Order.fromJson(json)).toList(),
+          'orders': (data['data'] as List)
+              .map((json) => Order.fromJson(json))
+              .toList(),
           'meta': data['meta'],
         };
       } else if (response.statusCode == 401) {
@@ -231,10 +277,7 @@ class ApiService {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        return {
-          'success': true,
-          'order': Order.fromJson(data['order']),
-        };
+        return {'success': true, 'order': Order.fromJson(data['order'])};
       } else if (response.statusCode == 401) {
         throw Exception('Session expired');
       } else if (response.statusCode == 403) {
@@ -279,7 +322,10 @@ class ApiService {
   }
 
   // Confirm delivery with OTP (Most critical method)
-  Future<Map<String, dynamic>> confirmDelivery(String orderId, String otp) async {
+  Future<Map<String, dynamic>> confirmDelivery(
+    String orderId,
+    String otp,
+  ) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl$apiVersion/driver/orders/$orderId/deliver'),
@@ -299,23 +345,26 @@ class ApiService {
         // Handle specific OTP errors
         final message = data['message'] ?? 'Invalid OTP';
         final remainingAttempts = data['remaining_attempts'];
-        
+
         if (message.contains('expired')) {
           return {
             'success': false,
-            'message': 'OTP has expired. Ask the outlet to generate a new OTP from their portal.',
+            'message':
+                'OTP has expired. Ask the outlet to generate a new OTP from their portal.',
             'error_type': 'expired',
           };
         } else if (message.contains('locked') || remainingAttempts == 0) {
           return {
             'success': false,
-            'message': 'Maximum attempts reached. OTP is locked. Please contact the warehouse to resolve this delivery.',
+            'message':
+                'Maximum attempts reached. OTP is locked. Please contact the warehouse to resolve this delivery.',
             'error_type': 'locked',
           };
         } else {
           return {
             'success': false,
-            'message': 'Incorrect OTP. ${remainingAttempts ?? 0} attempt(s) remaining.',
+            'message':
+                'Incorrect OTP. ${remainingAttempts ?? 0} attempt(s) remaining.',
             'error_type': 'incorrect',
             'remaining_attempts': remainingAttempts ?? 0,
           };
@@ -383,7 +432,9 @@ class ApiService {
   }) async {
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl$apiVersion/driver/notifications?page=$page&per_page=$perPage'),
+        Uri.parse(
+          '$baseUrl$apiVersion/driver/notifications?page=$page&per_page=$perPage',
+        ),
         headers: _headers,
       );
 
@@ -411,9 +462,7 @@ class ApiService {
     bool markAllAsRead = false,
   }) async {
     try {
-      final body = markAllAsRead 
-          ? {'all': true} 
-          : {'ids': ids ?? []};
+      final body = markAllAsRead ? {'all': true} : {'ids': ids ?? []};
 
       final response = await http.put(
         Uri.parse('$baseUrl$apiVersion/driver/notifications/read'),
@@ -461,10 +510,10 @@ class ApiService {
   // Get driver manifests
   Future<Map<String, dynamic>> getDriverManifests({String? status}) async {
     try {
-      final uri = status != null 
-        ? Uri.parse('$baseUrl$apiVersion/driver/manifests?status=$status')
-        : Uri.parse('$baseUrl$apiVersion/driver/manifests');
-        
+      final uri = status != null
+          ? Uri.parse('$baseUrl$apiVersion/driver/manifests?status=$status')
+          : Uri.parse('$baseUrl$apiVersion/driver/manifests');
+
       final response = await http.get(uri, headers: _headers);
 
       if (response.statusCode == 200) {
@@ -515,7 +564,9 @@ class ApiService {
   Future<Map<String, dynamic>> startDelivery(int manifestId) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl$apiVersion/driver/manifests/$manifestId/start-delivery'),
+        Uri.parse(
+          '$baseUrl$apiVersion/driver/manifests/$manifestId/start-delivery',
+        ),
         headers: _headers,
       );
 
@@ -528,14 +579,12 @@ class ApiService {
           'manifest': Manifest.fromJson(data['manifest']),
         };
       } else if (response.statusCode == 401) {
-        return {
-          'success': false,
-          'message': 'Session expired',
-        };
+        return {'success': false, 'message': 'Session expired'};
       } else if (response.statusCode == 422) {
         return {
           'success': false,
-          'message': data['message'] ?? 'Cannot start delivery for this manifest',
+          'message':
+              data['message'] ?? 'Cannot start delivery for this manifest',
         };
       } else {
         return {
@@ -544,10 +593,7 @@ class ApiService {
         };
       }
     } catch (e) {
-      return {
-        'success': false,
-        'message': 'Failed to start delivery $e',
-      };
+      return {'success': false, 'message': 'Failed to start delivery $e'};
     }
   }
 
@@ -568,10 +614,7 @@ class ApiService {
           'message': data['message'] ?? 'OTP verified successfully',
         };
       } else if (response.statusCode == 401) {
-        return {
-          'success': false,
-          'message': 'Session expired',
-        };
+        return {'success': false, 'message': 'Session expired'};
       } else if (response.statusCode == 422) {
         return {
           'success': false,
@@ -597,17 +640,18 @@ class ApiService {
     final mockOrders = <Order>[
       // Add mock orders here if needed
     ];
-    
+
     return mockOrders.where((order) {
       switch (status) {
         case 'active':
-          return order.status == OrderStatus.assigned || order.status == OrderStatus.active;
+          return order.status == OrderStatus.assigned ||
+              order.status == OrderStatus.active;
         case 'completed':
-          return order.status == OrderStatus.completed || order.status == OrderStatus.delivered;
+          return order.status == OrderStatus.completed ||
+              order.status == OrderStatus.delivered;
         default:
           return true;
       }
     }).toList();
   }
-
 }

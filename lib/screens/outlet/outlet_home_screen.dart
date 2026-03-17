@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 import '../../models/menu_item.dart';
+import '../../models/outlet.dart';
+import '../../models/user.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../auth/login_screen.dart';
@@ -16,6 +20,9 @@ class OutletHomeScreen extends StatefulWidget {
 class _OutletHomeScreenState extends State<OutletHomeScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
+  Outlet? _outlet;
+  User? _user;
+  bool _isLoading = true;
 
   final List<MenuItem> _menuItems = [
     MenuItem(
@@ -68,34 +75,70 @@ class _OutletHomeScreenState extends State<OutletHomeScreen> {
     ),
   ];
 
+  @override
+  void initState() {
+    super.initState();
+    _loadOutletData();
+  }
+
+  Future<void> _loadOutletData() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final outletJson = prefs.getString('outlet_data');
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+      if (outletJson != null) {
+        final outletData = jsonDecode(outletJson);
+        _outlet = Outlet.fromJson(outletData);
+      }
+
+      _user = authProvider.user;
+    } catch (e) {
+      print('Error loading outlet data: $e');
+    }
+
+    setState(() {
+      _isLoading = false;
+    });
+  }
+
   List<MenuItem> get filteredItems {
     if (_searchQuery.isEmpty) {
       return _menuItems;
     }
     return _menuItems
-        .where((item) =>
-            item.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-            item.category.toLowerCase().contains(_searchQuery.toLowerCase()))
+        .where(
+          (item) =>
+              item.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+              item.category.toLowerCase().contains(_searchQuery.toLowerCase()),
+        )
         .toList();
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
         backgroundColor: Colors.orange[600],
         foregroundColor: Colors.white,
-        title: const Text('Menu'),
+        title: Text(_outlet?.outletName ?? _user?.name ?? 'Outlet Dashboard'),
         actions: [
           Stack(
             children: [
               IconButton(
                 icon: const Icon(Icons.shopping_cart),
                 onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const CartScreen()),
-                  );
+                  Navigator.of(
+                    context,
+                  ).push(MaterialPageRoute(builder: (_) => const CartScreen()));
                 },
               ),
               Consumer<CartProvider>(
@@ -139,6 +182,7 @@ class _OutletHomeScreenState extends State<OutletHomeScreen> {
       ),
       body: Column(
         children: [
+          if (_outlet != null) _buildOutletInfoCard(),
           Container(
             color: Colors.white,
             padding: const EdgeInsets.all(16),
@@ -180,7 +224,7 @@ class _OutletHomeScreenState extends State<OutletHomeScreen> {
     return Consumer<CartProvider>(
       builder: (context, cart, child) {
         final quantity = cart.getItemQuantity(item.id);
-        
+
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
@@ -228,10 +272,7 @@ class _OutletHomeScreenState extends State<OutletHomeScreen> {
                       const SizedBox(height: 4),
                       Text(
                         item.description,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[600],
-                        ),
+                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -309,6 +350,142 @@ class _OutletHomeScreenState extends State<OutletHomeScreen> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildOutletInfoCard() {
+    return Container(
+      color: Colors.white,
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.orange[100],
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.store, color: Colors.orange[600], size: 24),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _outlet!.outletName,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Owner: ${_outlet!.ownerName}',
+                      style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                    ),
+                    Text(
+                      '${_outlet!.city}, ${_outlet!.state}',
+                      style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: _outlet!.status ? Colors.green[100] : Colors.red[100],
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  _outlet!.status ? 'Active' : 'Inactive',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: _outlet!.status
+                        ? Colors.green[700]
+                        : Colors.red[700],
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (_outlet!.walletBalance != null ||
+              _outlet!.activeOrdersCount != null)
+            const SizedBox(height: 16),
+          if (_outlet!.walletBalance != null ||
+              _outlet!.activeOrdersCount != null)
+            Row(
+              children: [
+                if (_outlet!.walletBalance != null)
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.blue[50],
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Column(
+                        children: [
+                          Text(
+                            'Wallet Balance',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '₹${_outlet!.walletBalance}',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blue[700],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                if (_outlet!.walletBalance != null &&
+                    _outlet!.activeOrdersCount != null)
+                  const SizedBox(width: 12),
+                if (_outlet!.activeOrdersCount != null)
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.orange[50],
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Column(
+                        children: [
+                          Text(
+                            'Active Orders',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${_outlet!.activeOrdersCount}',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.orange[700],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+        ],
+      ),
     );
   }
 }
