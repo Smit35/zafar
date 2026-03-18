@@ -87,7 +87,7 @@ class _OutletOrdersTabState extends State<OutletOrdersTab>
       child: Row(
         children: [
           Expanded(
-            child: _buildStatItem('3', 'New Orders', Colors.blue),
+            child: _buildStatItem('31', 'Total', Colors.blue),
           ),
           Container(
             width: 1,
@@ -95,7 +95,7 @@ class _OutletOrdersTabState extends State<OutletOrdersTab>
             color: Colors.grey[300],
           ),
           Expanded(
-            child: _buildStatItem('5', 'Preparing', Colors.orange),
+            child: _buildStatItem('5', 'Placed', Colors.orange),
           ),
           Container(
             width: 1,
@@ -103,7 +103,7 @@ class _OutletOrdersTabState extends State<OutletOrdersTab>
             color: Colors.grey[300],
           ),
           Expanded(
-            child: _buildStatItem('2', 'Ready', Colors.green),
+            child: _buildStatItem('2', 'Transit', Colors.green),
           ),
           Container(
             width: 1,
@@ -111,7 +111,7 @@ class _OutletOrdersTabState extends State<OutletOrdersTab>
             color: Colors.grey[300],
           ),
           Expanded(
-            child: _buildStatItem('24', 'Completed', Colors.grey),
+            child: _buildStatItem('24', 'Delivered', Colors.grey),
           ),
         ],
       ),
