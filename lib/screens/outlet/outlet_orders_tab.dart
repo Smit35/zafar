@@ -388,42 +388,42 @@ class _OutletOrdersTabState extends State<OutletOrdersTab> {
                   ],
                 ),
                 
-                const SizedBox(height: 8),
-                
-                // Created Date
-                Text(
-                  DateFormat('MMM dd, yyyy • HH:mm').format(order.createdAt),
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                
-                const SizedBox(height: 8),
-                
-                // Grand Total
-                Text(
-                  '₹${order.grandTotal.toStringAsFixed(2)}',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-                
                 const SizedBox(height: 12),
                 
-                // Additional Details Row
+                // Main Details Row
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // SKU
+                    // Left Column - Order Date and SKU
                     Expanded(
+                      flex: 3,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          // Order Date
                           Text(
-                            'SKU',
+                            'Order Date',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey[600],
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            DateFormat('MMM dd, yyyy • HH:mm').format(order.createdAt),
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: Colors.black87,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          
+                          const SizedBox(height: 12),
+                          
+                          // SKU
+                          Text(
+                            'Items',
                             style: TextStyle(
                               fontSize: 11,
                               color: Colors.grey[600],
@@ -443,12 +443,37 @@ class _OutletOrdersTabState extends State<OutletOrdersTab> {
                       ),
                     ),
                     
-                    // Dispatch Date (if available)
-                    if (order.dispatchDate != null)
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
+                    const SizedBox(width: 16),
+                    
+                    // Right Column - Total Amount and Dispatch Date
+                    Expanded(
+                      flex: 2,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          // Total Amount
+                          Text(
+                            'Total Amount',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey[600],
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '₹${order.grandTotal.toStringAsFixed(2)}',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          
+                          if (order.dispatchDate != null) ...[
+                            const SizedBox(height: 12),
+                            
+                            // Dispatch Date
                             Text(
                               'Dispatch Date',
                               style: TextStyle(
@@ -467,8 +492,9 @@ class _OutletOrdersTabState extends State<OutletOrdersTab> {
                               ),
                             ),
                           ],
-                        ),
+                        ],
                       ),
+                    ),
                   ],
                 ),
                 
