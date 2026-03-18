@@ -266,7 +266,7 @@ class _OutletOrdersTabState extends State<OutletOrdersTab> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -354,107 +354,129 @@ class _OutletOrdersTabState extends State<OutletOrdersTab> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Order Header
+                // Order Number and Status Badge
                 Row(
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: statusColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(
-                        Icons.receipt_long,
-                        color: statusColor,
-                        size: 20,
+                    Expanded(
+                      child: Text(
+                        order.orderNumber,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: statusColor,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Text(
+                        statusName,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                
+                const SizedBox(height: 8),
+                
+                // Created Date
+                Text(
+                  DateFormat('MMM dd, yyyy • HH:mm').format(order.createdAt),
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                
+                const SizedBox(height: 8),
+                
+                // Grand Total
+                Text(
+                  '₹${order.grandTotal.toStringAsFixed(2)}',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                
+                const SizedBox(height: 12),
+                
+                // Additional Details Row
+                Row(
+                  children: [
+                    // SKU
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            children: [
-                              Text(
-                                order.orderNumber,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                              const Spacer(),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: statusColor,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  statusName,
-                                  style: const TextStyle(
-                                    fontSize: 11,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
                           Text(
-                            '₹${order.grandTotal.toStringAsFixed(2)}',
+                            'SKU',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey[600],
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'SKU-${order.id}',
                             style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
                               color: Colors.black87,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ],
                       ),
                     ),
+                    
+                    // Dispatch Date (if available)
+                    if (order.dispatchDate != null)
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Dispatch Date',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Colors.grey[600],
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              DateFormat('MMM dd, HH:mm').format(order.dispatchDate!),
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: Colors.black87,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                   ],
                 ),
                 
-                const SizedBox(height: 16),
-                
-                // Order Details
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildOrderDetailItem(
-                        'Created',
-                        DateFormat('MMM dd, yyyy HH:mm').format(order.createdAt),
-                        Icons.schedule,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: _buildOrderDetailItem(
-                        'SKU',
-                        'SKU-${order.id}', // Static SKU for now
-                        Icons.qr_code,
-                      ),
-                    ),
-                  ],
-                ),
-                
-                if (order.dispatchDate != null) ...[
-                  const SizedBox(height: 12),
-                  _buildOrderDetailItem(
-                    'Dispatch Date',
-                    DateFormat('MMM dd, yyyy HH:mm').format(order.dispatchDate!),
-                    Icons.local_shipping,
-                  ),
-                ],
-                
+                // Delivery OTP (if available)
                 if (order.deliveryOtp != null) ...[
                   const SizedBox(height: 12),
                   Container(
+                    width: double.infinity,
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: Colors.orange[50],
@@ -466,7 +488,7 @@ class _OutletOrdersTabState extends State<OutletOrdersTab> {
                         Icon(
                           Icons.security,
                           color: Colors.orange[700],
-                          size: 20,
+                          size: 18,
                         ),
                         const SizedBox(width: 8),
                         Text(
@@ -496,29 +518,22 @@ class _OutletOrdersTabState extends State<OutletOrdersTab> {
           
           // Invoice Button
           Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.grey[50],
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(12),
-                bottomRight: Radius.circular(12),
-              ),
-            ),
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
             child: SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
                 onPressed: () {
-                  // TODO: Implement invoice functionality
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Invoice functionality will be implemented soon'),
                     ),
                   );
                 },
-                icon: const Icon(Icons.receipt),
+                icon: const Icon(Icons.receipt_outlined),
                 label: const Text('View Invoice'),
                 style: OutlinedButton.styleFrom(
                   side: BorderSide(color: Colors.grey[400]!),
+                  foregroundColor: Colors.grey[700],
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
