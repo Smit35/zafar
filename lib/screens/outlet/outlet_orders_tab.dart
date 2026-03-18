@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import '../../models/order.dart';
+import '../../services/api_service.dart';
 
 class OutletOrdersTab extends StatefulWidget {
   const OutletOrdersTab({super.key});
@@ -7,21 +10,137 @@ class OutletOrdersTab extends StatefulWidget {
   State<OutletOrdersTab> createState() => _OutletOrdersTabState();
 }
 
-class _OutletOrdersTabState extends State<OutletOrdersTab> 
-    with SingleTickerProviderStateMixin {
+class _OutletOrdersTabState extends State<OutletOrdersTab> {
+  final ApiService _apiService = ApiService();
+  final TextEditingController _searchController = TextEditingController();
   
-  late TabController _tabController;
-
+  DateTime? _fromDate;
+  DateTime? _toDate;
+  List<Order> _orders = [];
+  List<Order> _filteredOrders = [];
+  bool _isLoading = false;
+  
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _loadOrders();
+    _searchController.addListener(_filterOrders);
   }
 
   @override
   void dispose() {
-    _tabController.dispose();
+    _searchController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadOrders() async {
+    setState(() {
+      _isLoading = true;
+    });
+    
+    try {
+      String? dateFrom = _fromDate?.toIso8601String().split('T')[0];
+      String? dateTo = _toDate?.toIso8601String().split('T')[0];
+      
+      final result = await _apiService.getOutletOrders(
+        dateFrom: dateFrom,
+        dateTo: dateTo,
+      );
+      
+      if (result['success'] == true) {
+        setState(() {
+          _orders = result['orders'] ?? [];
+          _filteredOrders = _orders;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to load orders: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _filterOrders() {
+    final query = _searchController.text.toLowerCase();
+    setState(() {
+      _filteredOrders = _orders.where((order) {
+        return order.orderNumber.toLowerCase().contains(query);
+      }).toList();
+    });
+  }
+
+  Future<void> _selectDateRange() async {
+    final DateTimeRange? picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+      initialDateRange: _fromDate != null && _toDate != null
+          ? DateTimeRange(start: _fromDate!, end: _toDate!)
+          : null,
+    );
+    
+    if (picked != null) {
+      setState(() {
+        _fromDate = picked.start;
+        _toDate = picked.end;
+      });
+      _loadOrders();
+    }
+  }
+
+  void _clearDateFilter() {
+    setState(() {
+      _fromDate = null;
+      _toDate = null;
+    });
+    _loadOrders();
+  }
+
+  String _getStatusDisplayName(String status) {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return 'New';
+      case 'accepted':
+        return 'Preparing';
+      case 'ready_for_dispatch':
+        return 'Ready';
+      case 'dispatched':
+        return 'Dispatched';
+      case 'delivered':
+        return 'Delivered';
+      case 'cancelled':
+        return 'Cancelled';
+      default:
+        return status;
+    }
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return Colors.blue;
+      case 'accepted':
+        return Colors.orange;
+      case 'ready_for_dispatch':
+        return Colors.green;
+      case 'dispatched':
+        return Colors.purple;
+      case 'delivered':
+        return Colors.grey;
+      case 'cancelled':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
   }
 
   @override
@@ -32,37 +151,106 @@ class _OutletOrdersTabState extends State<OutletOrdersTab>
         children: [
           // Order Stats Card
           _buildStatsCard(),
-          
-          // Tab Bar
+          // Search and Filter Section
           Container(
+            padding: const EdgeInsets.all(16),
             color: Colors.white,
-            child: TabBar(
-              controller: _tabController,
-              labelColor: Colors.orange[600],
-              unselectedLabelColor: Colors.grey[600],
-              indicatorColor: Colors.orange[600],
-              labelStyle: const TextStyle(fontWeight: FontWeight.w600),
-              unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.normal),
-              tabs: const [
-                Tab(text: 'New'),
-                Tab(text: 'Preparing'),
-                Tab(text: 'Ready'),
-                Tab(text: 'Completed'),
+            child: Column(
+              children: [
+                // Search Bar
+                TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: 'Search by order number...',
+                    prefixIcon: const Icon(Icons.search),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey[300]!),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Colors.orange),
+                    ),
+                    filled: true,
+                    fillColor: Colors.grey[50],
+                  ),
+                ),
+                
+                const SizedBox(height: 16),
+                
+                // Date Filter
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: _selectDateRange,
+                        icon: const Icon(Icons.date_range),
+                        label: Text(
+                          _fromDate != null && _toDate != null
+                              ? '${DateFormat('MMM dd').format(_fromDate!)} - ${DateFormat('MMM dd').format(_toDate!)}'
+                              : 'Select Date Range',
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.orange[600],
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                        ),
+                      ),
+                    ),
+                    if (_fromDate != null || _toDate != null) ...[
+                      const SizedBox(width: 12),
+                      IconButton(
+                        onPressed: _clearDateFilter,
+                        icon: const Icon(Icons.clear),
+                        style: IconButton.styleFrom(
+                          backgroundColor: Colors.grey[100],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
               ],
             ),
           ),
-          
-          // Tab Views
+          // Orders List
           Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                _buildOrdersList('new'),
-                _buildOrdersList('preparing'),
-                _buildOrdersList('ready'),
-                _buildOrdersList('completed'),
-              ],
-            ),
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : RefreshIndicator(
+                    onRefresh: _loadOrders,
+                    child: _filteredOrders.isEmpty
+                        ? const Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.receipt_long_outlined,
+                                  size: 64,
+                                  color: Colors.grey,
+                                ),
+                                SizedBox(height: 16),
+                                Text(
+                                  'No orders found',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        : ListView.builder(
+                            padding: const EdgeInsets.all(16),
+                            itemCount: _filteredOrders.length,
+                            itemBuilder: (context, index) => _buildOrderCard(_filteredOrders[index]),
+                          ),
+                  ),
           ),
         ],
       ),
@@ -142,94 +330,10 @@ class _OutletOrdersTabState extends State<OutletOrdersTab>
     );
   }
 
-  Widget _buildOrdersList(String status) {
-    return RefreshIndicator(
-      onRefresh: () async {
-        // Refresh orders
-      },
-      child: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: status == 'new' ? 3 : status == 'preparing' ? 5 : status == 'ready' ? 2 : 8,
-        itemBuilder: (context, index) => _buildOrderCard(status, index),
-      ),
-    );
-  }
-
-  Widget _buildOrderCard(String status, int index) {
-    final orders = {
-      'new': [
-        {
-          'id': '#12348',
-          'customer': 'Rahul Sharma',
-          'items': 3,
-          'amount': 420,
-          'time': '2 mins ago',
-          'address': 'Block A, Sector 21, Noida',
-          'phone': '+91 98765 43210',
-        },
-        {
-          'id': '#12347',
-          'customer': 'Priya Patel',
-          'items': 2,
-          'amount': 280,
-          'time': '5 mins ago',
-          'address': 'H-123, Green Park, Delhi',
-          'phone': '+91 87654 32109',
-        },
-        {
-          'id': '#12346',
-          'customer': 'Amit Kumar',
-          'items': 1,
-          'amount': 150,
-          'time': '8 mins ago',
-          'address': 'Flat 45, Nehru Place, Delhi',
-          'phone': '+91 76543 21098',
-        },
-      ],
-      'preparing': [
-        {
-          'id': '#12345',
-          'customer': 'John Doe',
-          'items': 2,
-          'amount': 320,
-          'time': '15 mins ago',
-          'address': 'Villa 12, Gurgaon',
-          'phone': '+91 98765 43210',
-          'prepTime': '20 mins',
-        },
-      ],
-      'ready': [
-        {
-          'id': '#12344',
-          'customer': 'Jane Smith',
-          'items': 4,
-          'amount': 680,
-          'time': '25 mins ago',
-          'address': 'Tower B, DLF Phase 3',
-          'phone': '+91 87654 32109',
-        },
-      ],
-      'completed': [
-        {
-          'id': '#12343',
-          'customer': 'Mike Wilson',
-          'items': 1,
-          'amount': 120,
-          'time': '1 hour ago',
-          'address': 'Street 15, Model Town',
-          'phone': '+91 76543 21098',
-        },
-      ],
-    };
-
-    final orderList = orders[status] ?? [];
-    if (index >= orderList.length) {
-      return Container();
-    }
-
-    final order = orderList[index % orderList.length];
-    Color statusColor = _getStatusColor(status);
-
+  Widget _buildOrderCard(Order order) {
+    final statusColor = _getStatusColor(order.status);
+    final statusName = _getStatusDisplayName(order.status);
+    
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -237,7 +341,7 @@ class _OutletOrdersTabState extends State<OutletOrdersTab>
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -248,6 +352,7 @@ class _OutletOrdersTabState extends State<OutletOrdersTab>
           Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Order Header
                 Row(
@@ -255,7 +360,7 @@ class _OutletOrdersTabState extends State<OutletOrdersTab>
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: statusColor.withOpacity(0.1),
+                        color: statusColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
@@ -272,7 +377,7 @@ class _OutletOrdersTabState extends State<OutletOrdersTab>
                           Row(
                             children: [
                               Text(
-                                order['id'] as String,
+                                order.orderNumber,
                                 style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
@@ -280,36 +385,34 @@ class _OutletOrdersTabState extends State<OutletOrdersTab>
                                 ),
                               ),
                               const Spacer(),
-                              Text(
-                                '₹${order['amount']}',
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black87,
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: statusColor,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  statusName,
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                               ),
                             ],
                           ),
                           const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              Text(
-                                order['customer'] as String,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey[600],
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              const Spacer(),
-                              Text(
-                                '${order['items']} items • ${order['time']}',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey[500],
-                                ),
-                              ),
-                            ],
+                          Text(
+                            '₹${order.grandTotal.toStringAsFixed(2)}',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                            ),
                           ),
                         ],
                       ),
@@ -317,317 +420,151 @@ class _OutletOrdersTabState extends State<OutletOrdersTab>
                   ],
                 ),
                 
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
                 
-                // Customer Info
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[50],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Column(
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.location_on_outlined,
-                            color: Colors.grey[600],
-                            size: 16,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              order['address'] as String,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey[700],
-                              ),
-                            ),
-                          ),
-                        ],
+                // Order Details
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildOrderDetailItem(
+                        'Created',
+                        DateFormat('MMM dd, yyyy HH:mm').format(order.createdAt),
+                        Icons.schedule,
                       ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.phone_outlined,
-                            color: Colors.grey[600],
-                            size: 16,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            order['phone'] as String,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey[700],
-                            ),
-                          ),
-                          const Spacer(),
-                          if (status == 'preparing' && order['prepTime'] != null)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.orange[100],
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
-                                'Est. ${order['prepTime']}',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: Colors.orange[700],
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                        ],
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _buildOrderDetailItem(
+                        'SKU',
+                        'SKU-${order.id}', // Static SKU for now
+                        Icons.qr_code,
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
+                
+                if (order.dispatchDate != null) ...[
+                  const SizedBox(height: 12),
+                  _buildOrderDetailItem(
+                    'Dispatch Date',
+                    DateFormat('MMM dd, yyyy HH:mm').format(order.dispatchDate!),
+                    Icons.local_shipping,
+                  ),
+                ],
+                
+                if (order.deliveryOtp != null) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.orange[50],
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.orange[200]!),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.security,
+                          color: Colors.orange[700],
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Delivery OTP: ',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.orange[700],
+                          ),
+                        ),
+                        Text(
+                          order.deliveryOtp!,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.orange[700],
+                            letterSpacing: 2,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
           
-          // Action Buttons
-          _buildActionButtons(status, order),
+          // Invoice Button
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(12),
+                bottomRight: Radius.circular(12),
+              ),
+            ),
+            child: SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () {
+                  // TODO: Implement invoice functionality
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Invoice functionality will be implemented soon'),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.receipt),
+                label: const Text('View Invoice'),
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(color: Colors.grey[400]!),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildActionButtons(String status, Map<String, dynamic> order) {
-    switch (status) {
-      case 'new':
-        return Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.grey[50],
-            borderRadius: const BorderRadius.only(
-              bottomLeft: Radius.circular(12),
-              bottomRight: Radius.circular(12),
-            ),
-          ),
-          child: Row(
+  Widget _buildOrderDetailItem(String label, String value, IconData icon) {
+    return Row(
+      children: [
+        Icon(
+          icon,
+          size: 16,
+          color: Colors.grey[600],
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => _showRejectDialog(order),
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Colors.red),
-                    foregroundColor: Colors.red,
-                  ),
-                  child: const Text('Reject'),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.grey[600],
+                  fontWeight: FontWeight.w500,
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                flex: 2,
-                child: ElevatedButton(
-                  onPressed: () => _showAcceptDialog(order),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    foregroundColor: Colors.white,
-                  ),
-                  child: const Text('Accept'),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Colors.black87,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ],
           ),
-        );
-        
-      case 'preparing':
-        return Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.grey[50],
-            borderRadius: const BorderRadius.only(
-              bottomLeft: Radius.circular(12),
-              bottomRight: Radius.circular(12),
-            ),
-          ),
-          child: SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () => _markAsReady(order),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange[600],
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('Mark as Ready'),
-            ),
-          ),
-        );
-        
-      case 'ready':
-        return Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.grey[50],
-            borderRadius: const BorderRadius.only(
-              bottomLeft: Radius.circular(12),
-              bottomRight: Radius.circular(12),
-            ),
-          ),
-          child: SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () => _generateOTP(order),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('Generate OTP'),
-            ),
-          ),
-        );
-        
-      default:
-        return Container();
-    }
-  }
-
-  Color _getStatusColor(String status) {
-    switch (status) {
-      case 'new':
-        return Colors.blue;
-      case 'preparing':
-        return Colors.orange;
-      case 'ready':
-        return Colors.green;
-      case 'completed':
-        return Colors.grey;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  void _showRejectDialog(Map<String, dynamic> order) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Reject Order'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('Are you sure you want to reject order ${order['id']}?'),
-            const SizedBox(height: 16),
-            const TextField(
-              decoration: InputDecoration(
-                labelText: 'Reason (optional)',
-                border: OutlineInputBorder(),
-              ),
-              maxLines: 3,
-            ),
-          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              // Reject order logic
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Reject', style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showAcceptDialog(Map<String, dynamic> order) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Accept Order'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('Accept order ${order['id']}?'),
-            const SizedBox(height: 16),
-            const TextField(
-              decoration: InputDecoration(
-                labelText: 'Estimated preparation time (minutes)',
-                border: OutlineInputBorder(),
-              ),
-              keyboardType: TextInputType.number,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              // Accept order logic
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-            child: const Text('Accept', style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _markAsReady(Map<String, dynamic> order) {
-    // Mark order as ready logic
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Order ${order['id']} marked as ready'),
-        backgroundColor: Colors.green,
-      ),
-    );
-  }
-
-  void _generateOTP(Map<String, dynamic> order) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delivery OTP'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('Share this OTP with the delivery driver:'),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.orange[50],
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Text(
-                '1234',
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 4,
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'OTP valid for 15 minutes',
-              style: TextStyle(fontSize: 12, color: Colors.grey),
-            ),
-          ],
-        ),
-        actions: [
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
-          ),
-        ],
-      ),
+      ],
     );
   }
 }

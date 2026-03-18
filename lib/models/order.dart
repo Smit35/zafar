@@ -65,6 +65,8 @@ class Order {
   final double grandTotal;
   final DateTime createdAt;
   final DateTime? deliveredAt;
+  final DateTime? dispatchDate;
+  final String? deliveryOtp;
   final String? specialInstructions;
   final List<OrderItem> items;
   
@@ -82,6 +84,8 @@ class Order {
     required this.grandTotal,
     required this.createdAt,
     this.deliveredAt,
+    this.dispatchDate,
+    this.deliveryOtp,
     this.specialInstructions,
     this.items = const [],
   });
@@ -101,6 +105,8 @@ class Order {
       grandTotal: double.parse(json['grand_total']?.toString() ?? '0'),
       createdAt: DateTime.parse(json['created_at'] ?? DateTime.now().toIso8601String()),
       deliveredAt: json['delivered_at'] != null ? DateTime.parse(json['delivered_at']) : null,
+      dispatchDate: json['dispatch_date'] != null ? DateTime.parse(json['dispatch_date']) : null,
+      deliveryOtp: json['delivery_otp'],
       specialInstructions: json['special_instructions'],
       items: (json['items'] as List?)
           ?.map((item) => OrderItem.fromJson(item))
