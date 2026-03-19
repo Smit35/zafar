@@ -6,6 +6,7 @@ import '../models/order.dart';
 import '../models/driver.dart';
 import '../models/manifest.dart';
 import '../models/outlet.dart';
+import '../models/inventory_item.dart';
 
 class ApiService {
   static const String baseUrl =
@@ -850,6 +851,36 @@ class ApiService {
         return {'success': false, 'message': 'Session expired'};
       } else {
         return {'success': false, 'message': 'Failed to load profile'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
+  // Get outlet inventory
+  Future<Map<String, dynamic>> getOutletInventory({
+    int page = 1,
+    int perPage = 20,
+  }) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl$apiVersion/outlet/inventory?page=$page&per_page=$perPage'),
+        headers: _headers,
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return {
+          'success': true,
+          'items': (data['data']['data'] as List)
+              .map((json) => InventoryItem.fromJson(json))
+              .toList(),
+          'meta': data['data'],
+        };
+      } else if (response.statusCode == 401) {
+        return {'success': false, 'message': 'Session expired'};
+      } else {
+        return {'success': false, 'message': 'Failed to load inventory'};
       }
     } catch (e) {
       return {'success': false, 'message': 'Network error: ${e.toString()}'};

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../services/api_service.dart';
+import '../../models/inventory_item.dart';
 
 class OutletCatalogScreen extends StatefulWidget {
   const OutletCatalogScreen({super.key});
@@ -10,15 +12,81 @@ class OutletCatalogScreen extends StatefulWidget {
 class _OutletCatalogScreenState extends State<OutletCatalogScreen> {
   String _selectedCategory = 'All Items';
   final TextEditingController _searchController = TextEditingController();
+  final ApiService _apiService = ApiService();
 
-  final List<String> _categories = [
-    'All Items',
-    'Appetizers',
-    'Main Course',
-    'Desserts',
-    'Beverages',
-    'Specials',
-  ];
+  List<InventoryItem> _allItems = [];
+  List<InventoryItem> _filteredItems = [];
+  List<String> _categories = ['All Items'];
+  bool _isLoading = true;
+  String? _errorMessage;
+  Map<int, int> _quantities = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _loadInventory();
+  }
+
+  Future<void> _loadInventory() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final result = await _apiService.getOutletInventory();
+      
+      if (result['success']) {
+        final items = result['items'] as List<InventoryItem>;
+        final uniqueCategories = <String>{'All Items'};
+        
+        for (var item in items) {
+          uniqueCategories.add(item.category.name);
+        }
+        
+        setState(() {
+          _allItems = items;
+          _categories = uniqueCategories.toList();
+          _filteredItems = items;
+          _isLoading = false;
+        });
+        
+        _filterItems();
+      } else {
+        setState(() {
+          _errorMessage = result['message'];
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Failed to load inventory: $e';
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _filterItems() {
+    List<InventoryItem> filtered = _allItems;
+    
+    // Filter by category
+    if (_selectedCategory != 'All Items') {
+      filtered = filtered.where((item) => item.category.name == _selectedCategory).toList();
+    }
+    
+    // Filter by search text
+    final searchQuery = _searchController.text.toLowerCase();
+    if (searchQuery.isNotEmpty) {
+      filtered = filtered.where((item) {
+        return item.name.toLowerCase().contains(searchQuery) ||
+               item.sku.toLowerCase().contains(searchQuery);
+      }).toList();
+    }
+    
+    setState(() {
+      _filteredItems = filtered;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,43 +120,26 @@ class _OutletCatalogScreenState extends State<OutletCatalogScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       color: Colors.white,
-      child: Row(
-        children: [
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: TextField(
-                controller: _searchController,
-                decoration: InputDecoration(
-                  hintText: 'Search menu items...',
-                  hintStyle: TextStyle(color: Colors.grey[500], fontSize: 14),
-                  prefixIcon: Icon(Icons.search, color: Colors.grey[500]),
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.all(16),
-                ),
-                onChanged: (value) {
-                  // Implement search functionality
-                },
-              ),
-            ),
+      child: Expanded(
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.grey[100],
+            borderRadius: BorderRadius.circular(12),
           ),
-          const SizedBox(width: 12),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.orange[600],
-              borderRadius: BorderRadius.circular(12),
+          child: TextField(
+            controller: _searchController,
+            decoration: InputDecoration(
+              hintText: 'Search by name or SKU...',
+              hintStyle: TextStyle(color: Colors.grey[500], fontSize: 14),
+              prefixIcon: Icon(Icons.search, color: Colors.grey[500]),
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.all(16),
             ),
-            child: const Icon(
-              Icons.tune,
-              color: Colors.white,
-              size: 20,
-            ),
+            onChanged: (value) {
+              _filterItems();
+            },
           ),
-        ],
+        ),
       ),
     );
   }
@@ -110,6 +161,7 @@ class _OutletCatalogScreenState extends State<OutletCatalogScreen> {
               setState(() {
                 _selectedCategory = category;
               });
+              _filterItems();
             },
             child: Container(
               margin: const EdgeInsets.only(right: 12, top: 8, bottom: 8),
@@ -137,60 +189,115 @@ class _OutletCatalogScreenState extends State<OutletCatalogScreen> {
   }
 
   Widget _buildItemsList() {
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: 10,
-      itemBuilder: (context, index) => _buildMenuItem(index),
+    if (_isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(Colors.orange),
+        ),
+      );
+    }
+
+    if (_errorMessage != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 64,
+              color: Colors.grey[400],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Error Loading Items',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[700],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              _errorMessage!,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[600],
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _loadInventory,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange[600],
+              ),
+              child: const Text(
+                'Retry',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_filteredItems.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.inventory_2_outlined,
+              size: 64,
+              color: Colors.grey[400],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No Items Found',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[700],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Try adjusting your search or filters',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[600],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: _loadInventory,
+      child: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: _filteredItems.length,
+        itemBuilder: (context, index) => _buildMenuItem(_filteredItems[index]),
+      ),
     );
   }
 
-  Widget _buildMenuItem(int index) {
-    final items = [
-      {
-        'name': 'Chicken Biryani',
-        'description': 'Aromatic basmati rice with tender chicken',
-        'price': 320,
-        'category': 'Main Course',
-        'isAvailable': true,
-        'image': '🍗',
-      },
-      {
-        'name': 'Paneer Butter Masala',
-        'description': 'Creamy tomato based curry with paneer',
-        'price': 280,
-        'category': 'Main Course',
-        'isAvailable': true,
-        'image': '🧀',
-      },
-      {
-        'name': 'Samosa',
-        'description': 'Crispy fried pastry with spiced filling',
-        'price': 40,
-        'category': 'Appetizers',
-        'isAvailable': false,
-        'image': '🥟',
-      },
-      {
-        'name': 'Masala Chai',
-        'description': 'Traditional Indian spiced tea',
-        'price': 25,
-        'category': 'Beverages',
-        'isAvailable': true,
-        'image': '☕',
-      },
-      {
-        'name': 'Gulab Jamun',
-        'description': 'Sweet milk dumplings in sugar syrup',
-        'price': 80,
-        'category': 'Desserts',
-        'isAvailable': true,
-        'image': '🍮',
-      },
-    ];
+  void _updateQuantity(int itemId, int change) {
+    setState(() {
+      final currentQty = _quantities[itemId] ?? 0;
+      final newQty = (currentQty + change).clamp(0, double.infinity).toInt();
+      if (newQty == 0) {
+        _quantities.remove(itemId);
+      } else {
+        _quantities[itemId] = newQty;
+      }
+    });
+  }
 
-    final item = items[index % items.length];
-    final isAvailable = item['isAvailable'] as bool;
-
+  Widget _buildMenuItem(InventoryItem item) {
+    final currentQuantity = _quantities[item.id] ?? 0;
+    
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -215,13 +322,20 @@ class _OutletCatalogScreenState extends State<OutletCatalogScreen> {
               decoration: BoxDecoration(
                 color: Colors.orange[50],
                 borderRadius: BorderRadius.circular(12),
+                image: item.imagePath != null
+                    ? DecorationImage(
+                        image: NetworkImage(item.imageUrl),
+                        fit: BoxFit.cover,
+                      )
+                    : null,
               ),
-              child: Center(
-                child: Text(
-                  item['image'] as String,
-                  style: const TextStyle(fontSize: 24),
-                ),
-              ),
+              child: item.imagePath == null
+                  ? Icon(
+                      Icons.fastfood,
+                      color: Colors.orange[600],
+                      size: 30,
+                    )
+                  : null,
             ),
             const SizedBox(width: 16),
             
@@ -230,106 +344,122 @@ class _OutletCatalogScreenState extends State<OutletCatalogScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          item['name'] as String,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
-                          ),
-                        ),
-                      ),
-                      Switch(
-                        value: isAvailable,
-                        onChanged: (value) {
-                          // Update availability
-                        },
-                        activeColor: Colors.green,
-                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    item['description'] as String,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[600],
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
+                  // Product Name and SKU
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '₹${item['price']}',
+                        item.name,
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: Colors.black87,
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      Text(
+                        'SKU: ${item.sku}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  
+                  // Price with unit and stock info
+                  Row(
+                    children: [
+                      Text(
+                        '₹${item.priceValue.toStringAsFixed(2)} /unit',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 8,
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: isAvailable 
+                          color: item.isInStock 
                               ? Colors.green.withOpacity(0.1)
                               : Colors.red.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
-                          isAvailable ? 'Available' : 'Out of Stock',
+                          'Stock: ${item.availableStock.toStringAsFixed(0)}',
                           style: TextStyle(
                             fontSize: 10,
-                            color: isAvailable ? Colors.green : Colors.red,
+                            color: item.isInStock ? Colors.green : Colors.red,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
                       ),
-                      const Spacer(),
-                      PopupMenuButton<String>(
-                        icon: Icon(
-                          Icons.more_vert,
-                          color: Colors.grey[600],
-                          size: 20,
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  
+                  // Quantity Controls
+                  Row(
+                    children: [
+                      // Quantity controls
+                      Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey[300]!),
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                        onSelected: (value) {
-                          if (value == 'edit') {
-                            _showEditItemDialog(item);
-                          } else if (value == 'delete') {
-                            _showDeleteConfirmation(item);
-                          }
-                        },
-                        itemBuilder: (context) => [
-                          const PopupMenuItem(
-                            value: 'edit',
-                            child: Row(
-                              children: [
-                                Icon(Icons.edit, size: 18, color: Colors.blue),
-                                SizedBox(width: 8),
-                                Text('Edit'),
-                              ],
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            GestureDetector(
+                              onTap: currentQuantity > 0 
+                                  ? () => _updateQuantity(item.id, -1)
+                                  : null,
+                              child: Container(
+                                padding: const EdgeInsets.all(8),
+                                child: Icon(
+                                  Icons.remove,
+                                  size: 16,
+                                  color: currentQuantity > 0 
+                                      ? Colors.orange[600] 
+                                      : Colors.grey[400],
+                                ),
+                              ),
                             ),
-                          ),
-                          const PopupMenuItem(
-                            value: 'delete',
-                            child: Row(
-                              children: [
-                                Icon(Icons.delete, size: 18, color: Colors.red),
-                                SizedBox(width: 8),
-                                Text('Delete'),
-                              ],
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                              child: Text(
+                                currentQuantity.toString(),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                             ),
-                          ),
-                        ],
+                            GestureDetector(
+                              onTap: item.isInStock 
+                                  ? () => _updateQuantity(item.id, 1)
+                                  : null,
+                              child: Container(
+                                padding: const EdgeInsets.all(8),
+                                child: Icon(
+                                  Icons.add,
+                                  size: 16,
+                                  color: item.isInStock 
+                                      ? Colors.orange[600] 
+                                      : Colors.grey[400],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
