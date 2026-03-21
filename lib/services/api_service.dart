@@ -7,6 +7,7 @@ import '../models/driver.dart';
 import '../models/manifest.dart';
 import '../models/outlet.dart';
 import '../models/inventory_item.dart';
+import '../models/cart_models.dart';
 
 class ApiService {
   static const String baseUrl =
@@ -881,6 +882,148 @@ class ApiService {
         return {'success': false, 'message': 'Session expired'};
       } else {
         return {'success': false, 'message': 'Failed to load inventory'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
+  // Cart API Methods
+
+  // Add item to cart
+  Future<Map<String, dynamic>> addToCart(AddToCartRequest request) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl$apiVersion/outlet/cart/items'),
+        headers: _headers,
+        body: jsonEncode(request.toJson()),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return {
+          'success': true,
+          'message': data['message'] ?? 'Item added to cart successfully',
+        };
+      } else if (response.statusCode == 401) {
+        return {'success': false, 'message': 'Session expired'};
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to add item to cart',
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
+  // Get cart items
+  Future<Map<String, dynamic>> getCartItems() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl$apiVersion/outlet/cart'),
+        headers: _headers,
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return {
+          'success': true,
+          'items': (data['data'] as List)
+              .map((json) => CartItem.fromJson(json))
+              .toList(),
+        };
+      } else if (response.statusCode == 401) {
+        return {'success': false, 'message': 'Session expired'};
+      } else {
+        return {'success': false, 'message': 'Failed to load cart'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
+  // Update cart item quantity
+  Future<Map<String, dynamic>> updateCartItem(int cartItemId, int quantity) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl$apiVersion/outlet/cart/items/$cartItemId'),
+        headers: _headers,
+        body: jsonEncode({'quantity': quantity}),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'message': data['message'] ?? 'Cart updated successfully',
+        };
+      } else if (response.statusCode == 401) {
+        return {'success': false, 'message': 'Session expired'};
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to update cart',
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
+  // Remove item from cart
+  Future<Map<String, dynamic>> removeFromCart(int cartItemId) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl$apiVersion/outlet/cart/items/$cartItemId'),
+        headers: _headers,
+      );
+
+      final data = response.body.isNotEmpty ? jsonDecode(response.body) : {};
+
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        return {
+          'success': true,
+          'message': data['message'] ?? 'Item removed from cart',
+        };
+      } else if (response.statusCode == 401) {
+        return {'success': false, 'message': 'Session expired'};
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to remove item from cart',
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
+  // Clear cart
+  Future<Map<String, dynamic>> clearCart() async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl$apiVersion/outlet/cart/clear'),
+        headers: _headers,
+      );
+
+      final data = response.body.isNotEmpty ? jsonDecode(response.body) : {};
+
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        return {
+          'success': true,
+          'message': data['message'] ?? 'Cart cleared successfully',
+        };
+      } else if (response.statusCode == 401) {
+        return {'success': false, 'message': 'Session expired'};
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to clear cart',
+        };
       }
     } catch (e) {
       return {'success': false, 'message': 'Network error: ${e.toString()}'};

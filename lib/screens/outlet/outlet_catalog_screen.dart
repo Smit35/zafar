@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../services/api_service.dart';
 import '../../models/inventory_item.dart';
+import '../../models/cart_models.dart';
+import 'outlet_cart_screen.dart';
 
 class OutletCatalogScreen extends StatefulWidget {
   const OutletCatalogScreen({super.key});
@@ -20,11 +22,14 @@ class _OutletCatalogScreenState extends State<OutletCatalogScreen> {
   bool _isLoading = true;
   String? _errorMessage;
   Map<int, int> _quantities = {};
+  List<CartItem> _cartItems = [];
+  bool _loadingCart = false;
 
   @override
   void initState() {
     super.initState();
     _loadInventory();
+    _loadCartItems();
   }
 
   Future<void> _loadInventory() async {
@@ -66,6 +71,33 @@ class _OutletCatalogScreenState extends State<OutletCatalogScreen> {
     }
   }
 
+  Future<void> _loadCartItems() async {
+    setState(() {
+      _loadingCart = true;
+    });
+
+    try {
+      final result = await _apiService.getCartItems();
+      
+      if (result['success']) {
+        setState(() {
+          _cartItems = result['items'] as List<CartItem>;
+          _loadingCart = false;
+        });
+      } else {
+        setState(() {
+          _cartItems = [];
+          _loadingCart = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _cartItems = [];
+        _loadingCart = false;
+      });
+    }
+  }
+
   void _filterItems() {
     List<InventoryItem> filtered = _allItems;
     
@@ -90,6 +122,9 @@ class _OutletCatalogScreenState extends State<OutletCatalogScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final totalItems = _quantities.values.fold(0, (sum, qty) => sum + qty);
+    final cartHasItems = _cartItems.isNotEmpty;
+    
     return Scaffold(
       backgroundColor: Colors.grey[50],
       body: Column(
@@ -106,13 +141,55 @@ class _OutletCatalogScreenState extends State<OutletCatalogScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          _showAddItemDialog();
-        },
-        backgroundColor: Colors.orange[600],
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
+      // Floating checkout button when items are selected or cart has items
+      floatingActionButton: (totalItems > 0 || cartHasItems)
+          ? Container(
+              width: double.infinity,
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              child: FloatingActionButton.extended(
+                onPressed: totalItems > 0 ? _proceedToCheckout : _goToCart,
+                backgroundColor: Colors.orange[600],
+                elevation: 8,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                label: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      totalItems > 0
+                          ? '$totalItems ${totalItems == 1 ? 'item' : 'items'} added'
+                          : 'Cart: ${_cartItems.fold(0, (sum, item) => sum + item.quantity.toInt())} items',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        Text(
+                          totalItems > 0 ? 'Proceed to checkout' : 'Go to Checkout',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        const Icon(
+                          Icons.arrow_forward,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            )
+          : null,
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 
@@ -120,25 +197,23 @@ class _OutletCatalogScreenState extends State<OutletCatalogScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       color: Colors.white,
-      child: Expanded(
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.grey[100],
-            borderRadius: BorderRadius.circular(12),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.grey[100],
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: TextField(
+          controller: _searchController,
+          decoration: InputDecoration(
+            hintText: 'Search by name or SKU...',
+            hintStyle: TextStyle(color: Colors.grey[500], fontSize: 14),
+            prefixIcon: Icon(Icons.search, color: Colors.grey[500]),
+            border: InputBorder.none,
+            contentPadding: const EdgeInsets.all(16),
           ),
-          child: TextField(
-            controller: _searchController,
-            decoration: InputDecoration(
-              hintText: 'Search by name or SKU...',
-              hintStyle: TextStyle(color: Colors.grey[500], fontSize: 14),
-              prefixIcon: Icon(Icons.search, color: Colors.grey[500]),
-              border: InputBorder.none,
-              contentPadding: const EdgeInsets.all(16),
-            ),
-            onChanged: (value) {
-              _filterItems();
-            },
-          ),
+          onChanged: (value) {
+            _filterItems();
+          },
         ),
       ),
     );
@@ -295,6 +370,63 @@ class _OutletCatalogScreenState extends State<OutletCatalogScreen> {
     });
   }
 
+  Future<void> _proceedToCheckout() async {
+    // Add all items to cart via API
+    bool hasError = false;
+    
+    for (final entry in _quantities.entries) {
+      final productId = entry.key;
+      final quantity = entry.value;
+      
+      final request = AddToCartRequest(
+        productId: productId,
+        quantity: quantity,
+      );
+      
+      final result = await _apiService.addToCart(request);
+      if (!result['success']) {
+        hasError = true;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to add item to cart: ${result['message']}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        break;
+      }
+    }
+    
+    if (!hasError) {
+      // Clear local quantities since items are now in cart
+      setState(() {
+        _quantities.clear();
+      });
+      
+      // Refresh cart data
+      await _loadCartItems();
+      
+      // Navigate to cart screen
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const OutletCartScreen()),
+      ).then((_) {
+        // Refresh cart when returning from cart screen
+        _loadCartItems();
+      });
+    }
+  }
+  
+  Future<void> _goToCart() async {
+    // Navigate directly to cart screen
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const OutletCartScreen()),
+    ).then((_) {
+      // Refresh cart when returning from cart screen
+      _loadCartItems();
+    });
+  }
+
   Widget _buildMenuItem(InventoryItem item) {
     final currentQuantity = _quantities[item.id] ?? 0;
     
@@ -305,7 +437,7 @@ class _OutletCatalogScreenState extends State<OutletCatalogScreen> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -315,153 +447,160 @@ class _OutletCatalogScreenState extends State<OutletCatalogScreen> {
         padding: const EdgeInsets.all(16),
         child: Row(
           children: [
-            // Item Image
-            Container(
-              width: 60,
-              height: 60,
-              decoration: BoxDecoration(
-                color: Colors.orange[50],
-                borderRadius: BorderRadius.circular(12),
-                image: item.imagePath != null
-                    ? DecorationImage(
-                        image: NetworkImage(item.imageUrl),
-                        fit: BoxFit.cover,
-                      )
-                    : null,
-              ),
-              child: item.imagePath == null
-                  ? Icon(
-                      Icons.fastfood,
-                      color: Colors.orange[600],
-                      size: 30,
-                    )
-                  : null,
-            ),
-            const SizedBox(width: 16),
-            
-            // Item Details
+            // Left Side - Image and Basic Info
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              flex: 2,
+              child: Row(
                 children: [
-                  // Product Name and SKU
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        item.name,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      Text(
-                        'SKU: ${item.sku}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
+                  // Item Image
+                  Container(
+                    width: 60,
+                    height: 60,
+                    decoration: BoxDecoration(
+                      color: Colors.orange[50],
+                      borderRadius: BorderRadius.circular(12),
+                      image: item.imagePath != null
+                          ? DecorationImage(
+                              image: NetworkImage(item.imageUrl),
+                              fit: BoxFit.cover,
+                            )
+                          : null,
+                    ),
+                    child: item.imagePath == null
+                        ? Icon(
+                            Icons.fastfood,
+                            color: Colors.orange[600],
+                            size: 30,
+                          )
+                        : null,
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(width: 16),
                   
-                  // Price with unit and stock info
-                  Row(
-                    children: [
-                      Text(
-                        '₹${item.priceValue.toStringAsFixed(2)} /unit',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
+                  // Product Name and SKU
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          item.name,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 12),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: item.isInStock 
-                              ? Colors.green.withOpacity(0.1)
-                              : Colors.red.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text(
-                          'Stock: ${item.availableStock.toStringAsFixed(0)}',
+                        const SizedBox(height: 4),
+                        Text(
+                          'SKU: ${item.sku}',
                           style: TextStyle(
-                            fontSize: 10,
-                            color: item.isInStock ? Colors.green : Colors.red,
+                            fontSize: 12,
+                            color: Colors.grey[600],
                             fontWeight: FontWeight.w500,
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 12),
-                  
-                  // Quantity Controls
-                  Row(
-                    children: [
-                      // Quantity controls
-                      Container(
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey[300]!),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            GestureDetector(
-                              onTap: currentQuantity > 0 
-                                  ? () => _updateQuantity(item.id, -1)
-                                  : null,
-                              child: Container(
-                                padding: const EdgeInsets.all(8),
-                                child: Icon(
-                                  Icons.remove,
-                                  size: 16,
-                                  color: currentQuantity > 0 
-                                      ? Colors.orange[600] 
-                                      : Colors.grey[400],
-                                ),
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
-                              ),
-                              child: Text(
-                                currentQuantity.toString(),
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                            GestureDetector(
-                              onTap: item.isInStock 
-                                  ? () => _updateQuantity(item.id, 1)
-                                  : null,
-                              child: Container(
-                                padding: const EdgeInsets.all(8),
-                                child: Icon(
-                                  Icons.add,
-                                  size: 16,
-                                  color: item.isInStock 
-                                      ? Colors.orange[600] 
-                                      : Colors.grey[400],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                ],
+              ),
+            ),
+            
+            // Center - Price and Stock
+            Expanded(
+              flex: 1,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    '₹${item.priceValue.toStringAsFixed(2)}',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  Text(
+                    '/${item.uom}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: item.isInStock 
+                          ? Colors.green.withValues(alpha: 0.1)
+                          : Colors.red.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      'Stock: ${item.availableStock.toStringAsFixed(0)}',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: item.isInStock ? Colors.green : Colors.red,
+                        fontWeight: FontWeight.w500,
                       ),
-                    ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            
+            // Right Side - Quantity Controls
+            Container(
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey[300]!),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  GestureDetector(
+                    onTap: currentQuantity > 0 
+                        ? () => _updateQuantity(item.id, -1)
+                        : null,
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      child: Icon(
+                        Icons.remove,
+                        size: 16,
+                        color: currentQuantity > 0 
+                            ? Colors.orange[600] 
+                            : Colors.grey[400],
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    child: Text(
+                      currentQuantity.toString(),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: item.isInStock 
+                        ? () => _updateQuantity(item.id, 1)
+                        : null,
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      child: Icon(
+                        Icons.add,
+                        size: 16,
+                        color: item.isInStock 
+                            ? Colors.orange[600] 
+                            : Colors.grey[400],
+                      ),
+                    ),
                   ),
                 ],
               ),
