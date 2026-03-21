@@ -19,10 +19,12 @@ class _OutletOrdersTabState extends State<OutletOrdersTab> {
   List<Order> _orders = [];
   List<Order> _filteredOrders = [];
   bool _isLoading = false;
+  Map<String, dynamic>? _dashboardStats;
   
   @override
   void initState() {
     super.initState();
+    _loadDashboardStats();
     _loadOrders();
     _searchController.addListener(_filterOrders);
   }
@@ -39,17 +41,25 @@ class _OutletOrdersTabState extends State<OutletOrdersTab> {
     });
     
     try {
+      // Load dashboard stats and orders in parallel
+      final futures = <Future>[
+        _loadDashboardStats(),
+      ];
+      
       String? dateFrom = _fromDate?.toIso8601String().split('T')[0];
       String? dateTo = _toDate?.toIso8601String().split('T')[0];
       
-      final result = await _apiService.getOutletOrders(
+      futures.add(_apiService.getOutletOrders(
         dateFrom: dateFrom,
         dateTo: dateTo,
-      );
+      ));
       
-      if (result['success'] == true) {
+      final results = await Future.wait(futures);
+      final ordersResult = results[1] as Map<String, dynamic>;
+      
+      if (ordersResult['success'] == true) {
         setState(() {
-          _orders = result['orders'] ?? [];
+          _orders = ordersResult['orders'] ?? [];
           _filteredOrders = _orders;
         });
       }
@@ -66,6 +76,22 @@ class _OutletOrdersTabState extends State<OutletOrdersTab> {
       setState(() {
         _isLoading = false;
       });
+    }
+  }
+
+  Future<void> _loadDashboardStats() async {
+    try {
+      final response = await _apiService.getOutletDashboard();
+      print("Orders tab dashboard response: $response");
+      
+      if (response['success'] && mounted) {
+        setState(() {
+          _dashboardStats = response['dashboard']?['data']?['statistics'];
+        });
+        print("Orders tab dashboard stats loaded: $_dashboardStats");
+      }
+    } catch (e) {
+      print("Orders tab dashboard error: $e");
     }
   }
 
@@ -258,6 +284,11 @@ class _OutletOrdersTabState extends State<OutletOrdersTab> {
   }
 
   Widget _buildStatsCard() {
+    final totalOrders = _dashboardStats?['total_orders']?.toString() ?? '0';
+    final placedOrders = _dashboardStats?['draft_orders']?.toString() ?? '0';
+    final transitOrders = _dashboardStats?['out_for_delivery_orders']?.toString() ?? '0';
+    final deliveredOrders = _dashboardStats?['delivered_orders']?.toString() ?? '0';
+    
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(16),
@@ -275,7 +306,7 @@ class _OutletOrdersTabState extends State<OutletOrdersTab> {
       child: Row(
         children: [
           Expanded(
-            child: _buildStatItem('31', 'Total', Colors.blue),
+            child: _buildStatItem(totalOrders, 'Total', Colors.blue),
           ),
           Container(
             width: 1,
@@ -283,7 +314,7 @@ class _OutletOrdersTabState extends State<OutletOrdersTab> {
             color: Colors.grey[300],
           ),
           Expanded(
-            child: _buildStatItem('5', 'Placed', Colors.orange),
+            child: _buildStatItem(placedOrders, 'Placed', Colors.orange),
           ),
           Container(
             width: 1,
@@ -291,7 +322,7 @@ class _OutletOrdersTabState extends State<OutletOrdersTab> {
             color: Colors.grey[300],
           ),
           Expanded(
-            child: _buildStatItem('2', 'Transit', Colors.green),
+            child: _buildStatItem(transitOrders, 'Transit', Colors.green),
           ),
           Container(
             width: 1,
@@ -299,7 +330,7 @@ class _OutletOrdersTabState extends State<OutletOrdersTab> {
             color: Colors.grey[300],
           ),
           Expanded(
-            child: _buildStatItem('24', 'Delivered', Colors.grey),
+            child: _buildStatItem(deliveredOrders, 'Delivered', Colors.grey),
           ),
         ],
       ),
@@ -573,39 +604,4 @@ class _OutletOrdersTabState extends State<OutletOrdersTab> {
     );
   }
 
-  Widget _buildOrderDetailItem(String label, String value, IconData icon) {
-    return Row(
-      children: [
-        Icon(
-          icon,
-          size: 16,
-          color: Colors.grey[600],
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: Colors.grey[600],
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Colors.black87,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
 }

@@ -18,10 +18,11 @@ class _OutletHomeTabState extends State<OutletHomeTab> {
   List<Order> _todayOrders = [];
   bool _isLoading = true;
 
-  // Static order counts for now
-  int _totalOrders = 0;
-  int _pendingOrders = 0;
-  int _deliveredOrders = 0;
+  // Dashboard statistics
+  Map<String, dynamic>? _dashboardStats;
+  int get _totalOrders => _dashboardStats?['total_orders'] ?? 0;
+  int get _pendingOrders => _dashboardStats?['pending_orders'] ?? 0;
+  int get _deliveredOrders => _dashboardStats?['delivered_orders'] ?? 0;
 
   @override
   void initState() {
@@ -31,6 +32,7 @@ class _OutletHomeTabState extends State<OutletHomeTab> {
 
   Future<void> _loadData() async {
     await _loadOutletName();
+    await _loadDashboardStats();
     await _loadTodayOrders();
   }
 
@@ -47,7 +49,22 @@ class _OutletHomeTabState extends State<OutletHomeTab> {
         }
       }
     } catch (e) {
-      // Error loading outlet name - using default value
+      print("Outlet error $e");    }
+  }
+
+  Future<void> _loadDashboardStats() async {
+    try {
+      final response = await _apiService.getOutletDashboard();
+      print("Dashboard response: $response");
+      
+      if (response['success'] && mounted) {
+        setState(() {
+          _dashboardStats = response['dashboard']?['data']?['statistics'];
+        });
+        print("Dashboard stats loaded: $_dashboardStats");
+      }
+    } catch (e) {
+      print("Dashboard error $e");
     }
   }
 
@@ -64,15 +81,6 @@ class _OutletHomeTabState extends State<OutletHomeTab> {
         final orders = response['orders'] as List<Order>;
         setState(() {
           _todayOrders = orders;
-          _totalOrders = orders.length;
-          _pendingOrders = orders.where((order) => 
-            order.status == 'pending' || 
-            order.status == 'accepted' || 
-            order.status == 'preparing'
-          ).length;
-          _deliveredOrders = orders.where((order) => 
-            order.status == 'delivered'
-          ).length;
           _isLoading = false;
         });
       } else {
