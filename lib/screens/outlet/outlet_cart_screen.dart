@@ -259,9 +259,6 @@ class _OutletCartScreenState extends State<OutletCartScreen> {
           
           const Divider(thickness: 1),
           const SizedBox(height: 8),
-          
-          // Order Total
-          _buildOrderTotal(),
         ],
       ),
     );
@@ -423,62 +420,6 @@ class _OutletCartScreenState extends State<OutletCartScreen> {
     );
   }
 
-  Widget _buildOrderTotal() {
-    return Column(
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text(
-              'Subtotal:',
-              style: TextStyle(fontSize: 14, color: Colors.black87),
-            ),
-            Text(
-              '₹${_subtotal.toStringAsFixed(2)}',
-              style: const TextStyle(fontSize: 14, color: Colors.black87),
-            ),
-          ],
-        ),
-        const SizedBox(height: 4),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text(
-              'GST (18%):',
-              style: TextStyle(fontSize: 14, color: Colors.black87),
-            ),
-            Text(
-              '₹${_gstAmount.toStringAsFixed(2)}',
-              style: const TextStyle(fontSize: 14, color: Colors.black87),
-            ),
-          ],
-        ),
-        const Divider(thickness: 1),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text(
-              'Total:',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-            ),
-            Text(
-              '₹${_total.toStringAsFixed(2)}',
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.orange,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
   Widget _buildCheckoutSection() {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -587,7 +528,7 @@ class _OutletCartScreenState extends State<OutletCartScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(
-                      'Total Amount:',
+                      'Grand Total:',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
