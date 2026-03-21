@@ -890,6 +890,30 @@ class ApiService {
 
   // Cart API Methods
 
+  // Get outlet order preview
+  Future<Map<String, dynamic>> getOutletOrderPreview() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl$apiVersion/outlet/orders/preview'),
+        headers: _headers,
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return {
+          'success': true,
+          'data': data['data'],
+        };
+      } else if (response.statusCode == 401) {
+        return {'success': false, 'message': 'Session expired'};
+      } else {
+        return {'success': false, 'message': 'Failed to load order preview'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
   // Add item to cart
   Future<Map<String, dynamic>> addToCart(AddToCartRequest request) async {
     try {

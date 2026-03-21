@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../services/api_service.dart';
-import '../../models/cart_models.dart';
 
 class OutletCartScreen extends StatefulWidget {
   const OutletCartScreen({super.key});
@@ -12,7 +11,8 @@ class OutletCartScreen extends StatefulWidget {
 class _OutletCartScreenState extends State<OutletCartScreen> {
   final ApiService _apiService = ApiService();
   
-  List<CartItem> _cartItems = [];
+  Map<String, dynamic>? _orderPreview;
+  List<dynamic> _items = [];
   bool _isLoading = true;
   String? _errorMessage;
 
@@ -29,11 +29,12 @@ class _OutletCartScreenState extends State<OutletCartScreen> {
     });
 
     try {
-      final result = await _apiService.getCartItems();
+      final result = await _apiService.getOutletOrderPreview();
       
       if (result['success']) {
         setState(() {
-          _cartItems = result['items'] as List<CartItem>;
+          _orderPreview = result['data'];
+          _items = _orderPreview?['pricing']?['items'] ?? [];
           _isLoading = false;
         });
       } else {
@@ -44,64 +45,76 @@ class _OutletCartScreenState extends State<OutletCartScreen> {
       }
     } catch (e) {
       setState(() {
-        _errorMessage = 'Failed to load cart: $e';
+        _errorMessage = 'Failed to load order preview: $e';
         _isLoading = false;
       });
     }
   }
 
 
-  Future<void> _updateQuantity(CartItem item, int newQuantity) async {
+  Future<void> _updateQuantity(Map<String, dynamic> item, int newQuantity) async {
     if (newQuantity <= 0) {
       await _removeFromCart(item);
       return;
     }
 
-    final result = await _apiService.updateCartItem(item.id, newQuantity);
+    // Use cart_item_id from the preview API response
+    final result = await _apiService.updateCartItem(item['cart_item_id'], newQuantity);
     
     if (result['success']) {
-      _loadCartItems(); // Reload cart
+      _loadCartItems(); // Reload preview
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to update quantity: ${result['message']}'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to update quantity: ${result['message']}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
-  Future<void> _removeFromCart(CartItem item) async {
-    final result = await _apiService.removeFromCart(item.id);
+  Future<void> _removeFromCart(Map<String, dynamic> item) async {
+    // Use cart_item_id from the preview API response
+    final result = await _apiService.removeFromCart(item['cart_item_id']);
     
     if (result['success']) {
-      _loadCartItems(); // Reload cart
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('${item.product.name} removed from cart'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      _loadCartItems(); // Reload preview
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${item['product_name']} removed from cart'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to remove item: ${result['message']}'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to remove item: ${result['message']}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
   double get _subtotal {
-    return _cartItems.fold(0, (sum, item) => sum + item.totalPrice);
+    return (_orderPreview?['pricing']?['subtotal'] ?? 0).toDouble();
   }
 
-  double get _gstAmount {
-    return _subtotal * 0.18; // Static 18% GST as requested
+  double get _cgstAmount {
+    return (_orderPreview?['pricing']?['cgst_amount'] ?? 0).toDouble();
+  }
+
+  double get _sgstAmount {
+    return (_orderPreview?['pricing']?['sgst_amount'] ?? 0).toDouble();
   }
 
   double get _total {
-    return _subtotal + _gstAmount;
+    return (_orderPreview?['pricing']?['grand_total'] ?? 0).toDouble();
   }
 
   @override
@@ -127,7 +140,7 @@ class _OutletCartScreenState extends State<OutletCartScreen> {
             )
           : _errorMessage != null
               ? _buildErrorState()
-              : _cartItems.isEmpty
+              : _items.isEmpty
                   ? _buildEmptyState()
                   : Column(
                       children: [
@@ -249,9 +262,9 @@ class _OutletCartScreenState extends State<OutletCartScreen> {
           // Cart Items
           Expanded(
             child: ListView.builder(
-              itemCount: _cartItems.length,
+              itemCount: _items.length,
               itemBuilder: (context, index) {
-                final item = _cartItems[index];
+                final item = _items[index];
                 return _buildCartItemCard(item);
               },
             ),
@@ -264,7 +277,7 @@ class _OutletCartScreenState extends State<OutletCartScreen> {
     );
   }
 
-  Widget _buildCartItemCard(CartItem item) {
+  Widget _buildCartItemCard(Map<String, dynamic> item) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
@@ -288,14 +301,14 @@ class _OutletCartScreenState extends State<OutletCartScreen> {
             decoration: BoxDecoration(
               color: Colors.orange[50],
               borderRadius: BorderRadius.circular(8),
-              image: item.product.imagePath != null
+              image: item['image_path'] != null
                   ? DecorationImage(
-                      image: NetworkImage(item.product.imageUrl),
+                      image: NetworkImage('${ApiService.baseUrl}/storage/${item['image_path']}'),
                       fit: BoxFit.cover,
                     )
                   : null,
             ),
-            child: item.product.imagePath == null
+            child: item['image_path'] == null
                 ? Icon(
                     Icons.fastfood,
                     color: Colors.orange[600],
@@ -311,7 +324,7 @@ class _OutletCartScreenState extends State<OutletCartScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  item.product.name,
+                  item['product_name'] ?? '',
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
@@ -319,7 +332,7 @@ class _OutletCartScreenState extends State<OutletCartScreen> {
                   ),
                 ),
                 Text(
-                  'SKU: ${item.product.sku}',
+                  'SKU: ${item['sku'] ?? ''} • GST: ${item['gst_percent'] ?? 0}%',
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.grey[600],
@@ -327,7 +340,7 @@ class _OutletCartScreenState extends State<OutletCartScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '₹${item.product.priceValue.toStringAsFixed(2)}/${item.product.uom}',
+                  '₹${double.parse(item['unit_price'] ?? '0').toStringAsFixed(2)} each',
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
@@ -342,7 +355,7 @@ class _OutletCartScreenState extends State<OutletCartScreen> {
           Row(
             children: [
               GestureDetector(
-                onTap: () => _updateQuantity(item, item.quantity.toInt() - 1),
+                onTap: () => _updateQuantity(item, double.parse(item['quantity'] ?? '1').toInt() - 1),
                 child: Container(
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
@@ -359,7 +372,7 @@ class _OutletCartScreenState extends State<OutletCartScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 child: Text(
-                  item.quantity.toStringAsFixed(0),
+                  double.parse(item['quantity'] ?? '1').toStringAsFixed(0),
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
@@ -367,7 +380,7 @@ class _OutletCartScreenState extends State<OutletCartScreen> {
                 ),
               ),
               GestureDetector(
-                onTap: () => _updateQuantity(item, item.quantity.toInt() + 1),
+                onTap: () => _updateQuantity(item, double.parse(item['quantity'] ?? '1').toInt() + 1),
                 child: Container(
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
@@ -391,7 +404,7 @@ class _OutletCartScreenState extends State<OutletCartScreen> {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                '₹${item.totalPrice.toStringAsFixed(2)}',
+                '₹${(item['line_total'] ?? 0).toStringAsFixed(2)}',
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
@@ -452,7 +465,7 @@ class _OutletCartScreenState extends State<OutletCartScreen> {
                 ),
               ),
               TextButton.icon(
-                onPressed: _cartItems.isNotEmpty ? _clearCart : null,
+                onPressed: _items.isNotEmpty ? _clearCart : null,
                 icon: const Icon(Icons.clear_all, size: 16),
                 label: const Text('Clear Cart'),
                 style: TextButton.styleFrom(
@@ -477,23 +490,6 @@ class _OutletCartScreenState extends State<OutletCartScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(
-                      'Total Items:',
-                      style: TextStyle(fontSize: 14),
-                    ),
-                    Text(
-                      '${_cartItems.fold(0, (sum, item) => sum + item.quantity.toInt())}',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
-                ),
-                const Divider(height: 16, thickness: 0.5),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
                       'Subtotal:',
                       style: TextStyle(fontSize: 14),
                     ),
@@ -511,11 +507,28 @@ class _OutletCartScreenState extends State<OutletCartScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(
-                      'GST (18%):',
+                      'CGST:',
                       style: TextStyle(fontSize: 14),
                     ),
                     Text(
-                      '₹${_gstAmount.toStringAsFixed(2)}',
+                      '₹${_cgstAmount.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'SGST:',
+                      style: TextStyle(fontSize: 14),
+                    ),
+                    Text(
+                      '₹${_sgstAmount.toStringAsFixed(2)}',
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
@@ -555,7 +568,7 @@ class _OutletCartScreenState extends State<OutletCartScreen> {
             width: double.infinity,
             height: 50,
             child: ElevatedButton(
-              onPressed: _cartItems.isNotEmpty ? _placeOrder : null,
+              onPressed: _items.isNotEmpty ? _placeOrder : null,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.orange[600],
                 shape: RoundedRectangleBorder(
@@ -582,22 +595,26 @@ class _OutletCartScreenState extends State<OutletCartScreen> {
     final result = await _apiService.clearCart();
     
     if (result['success']) {
-      setState(() {
-        _cartItems.clear();
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(result['message'] ?? 'Cart cleared successfully'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Cart cleared successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        
+        // Navigate back to catalog screen after clearing cart
+        Navigator.of(context).pop();
+      }
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to clear cart: ${result['message']}'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to clear cart: ${result['message']}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
