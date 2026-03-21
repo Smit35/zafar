@@ -135,12 +135,23 @@ class _OutletOrderConfirmationScreenState extends State<OutletOrderConfirmationS
     });
   }
 
-  Future<void> _uploadPaymentProof() async {
+  Future<void> _submitPayment() async {
     if (_selectedImage == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please select a payment proof image first'),
+          content: Text('Please select a payment screenshot first'),
           backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    final upiVpa = _upiSettings['vpa'];
+    if (upiVpa == null || upiVpa.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('UPI VPA not available'),
+          backgroundColor: Colors.red,
         ),
       );
       return;
@@ -151,25 +162,39 @@ class _OutletOrderConfirmationScreenState extends State<OutletOrderConfirmationS
     });
 
     try {
-      // TODO: Implement payment proof upload API call
-      await Future.delayed(const Duration(seconds: 2)); // Simulate upload
+      final orderId = widget.orderData['id'].toString();
+      
+      final result = await _apiService.submitOrderPayment(
+        orderId: orderId,
+        paymentScreenshot: _selectedImage!,
+        upiVpa: upiVpa,
+      );
       
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Payment proof uploaded successfully!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        
-        // Navigate back to home/orders screen
-        Navigator.of(context).popUntil((route) => route.isFirst);
+        if (result['success']) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result['message'] ?? 'Payment submitted successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          
+          // Navigate to catalog screen (pop until we reach the outlet main screen with tabs)
+          Navigator.of(context).popUntil((route) => route.isFirst);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to submit payment: ${result['message']}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to upload payment proof: $e'),
+            content: Text('Failed to submit payment: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -755,7 +780,7 @@ class _OutletOrderConfirmationScreenState extends State<OutletOrderConfirmationS
             width: double.infinity,
             height: 50,
             child: ElevatedButton(
-              onPressed: _isUploading ? null : _uploadPaymentProof,
+              onPressed: _isUploading ? null : _submitPayment,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.orange[600],
                 shape: RoundedRectangleBorder(
@@ -772,7 +797,7 @@ class _OutletOrderConfirmationScreenState extends State<OutletOrderConfirmationS
                       ),
                     )
                   : const Text(
-                      'Upload Payment Proof',
+                      'Submit Payment',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 16,
@@ -797,7 +822,7 @@ class _OutletOrderConfirmationScreenState extends State<OutletOrderConfirmationS
               ),
             ),
             child: Text(
-              _selectedImage != null ? 'Skip for Now' : 'Continue to Dashboard',
+              _selectedImage != null ? 'Skip for Now' : 'Continue to Catalog',
               style: TextStyle(
                 color: Colors.grey[700],
                 fontSize: 16,

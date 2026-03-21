@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import '../models/order.dart';
 // import '../models/cart_item.dart'; // Commented out - unused import
@@ -1057,6 +1058,58 @@ class ApiService {
         return {
           'success': false,
           'message': data['message'] ?? 'Failed to place order',
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
+  // Submit payment for order
+  Future<Map<String, dynamic>> submitOrderPayment({
+    required String orderId,
+    required File paymentScreenshot,
+    required String upiVpa,
+  }) async {
+    try {
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse('$baseUrl$apiVersion/outlet/orders/$orderId/submit-payment'),
+      );
+
+      // Add headers
+      request.headers.addAll({
+        'Accept': 'application/json',
+        if (_token != null) 'Authorization': 'Bearer $_token',
+      });
+
+      // Add form fields
+      request.fields['upi_vpa'] = upiVpa;
+
+      // Add file
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'payment_screenshot',
+          paymentScreenshot.path,
+        ),
+      );
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      final data = response.body.isNotEmpty ? jsonDecode(response.body) : {};
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return {
+          'success': true,
+          'message': data['message'] ?? 'Payment submitted successfully',
+        };
+      } else if (response.statusCode == 401) {
+        return {'success': false, 'message': 'Session expired'};
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to submit payment',
         };
       }
     } catch (e) {
