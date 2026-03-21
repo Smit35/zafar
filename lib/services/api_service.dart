@@ -1026,6 +1026,44 @@ class ApiService {
     }
   }
 
+  // Place outlet order
+  Future<Map<String, dynamic>> placeOutletOrder({
+    required DateTime dispatchDate,
+    String? notes,
+    required double walletAmountToUse,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl$apiVersion/outlet/orders'),
+        headers: _headers,
+        body: jsonEncode({
+          'dispatch_date': '${dispatchDate.year}-${dispatchDate.month.toString().padLeft(2, '0')}-${dispatchDate.day.toString().padLeft(2, '0')}',
+          'wallet_amount_to_use': walletAmountToUse,
+          if (notes != null) 'notes': notes,
+        }),
+      );
+
+      final data = response.body.isNotEmpty ? jsonDecode(response.body) : {};
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return {
+          'success': true,
+          'data': data['data'],
+          'message': data['message'] ?? 'Order placed successfully',
+        };
+      } else if (response.statusCode == 401) {
+        return {'success': false, 'message': 'Session expired'};
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to place order',
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
   // Clear cart
   Future<Map<String, dynamic>> clearCart() async {
     try {
