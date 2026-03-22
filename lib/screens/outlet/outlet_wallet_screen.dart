@@ -20,14 +20,14 @@ class _OutletWalletScreenState extends State<OutletWalletScreen> {
             // Wallet Balance Card
             _buildWalletCard(),
             
-            // Quick Actions
-            _buildQuickActions(),
+            // // Quick Actions
+            // _buildQuickActions(),
             
             // Transaction History
             _buildTransactionHistory(),
             
-            // Financial Summary
-            _buildFinancialSummary(),
+            // // Financial Summary
+            // _buildFinancialSummary(),
           ],
         ),
       ),
@@ -196,7 +196,7 @@ class _OutletWalletScreenState extends State<OutletWalletScreen> {
     );
   }
 
-  Widget _buildQuickActions() {
+  /*Widget _buildQuickActions() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(16),
@@ -263,7 +263,7 @@ class _OutletWalletScreenState extends State<OutletWalletScreen> {
         ],
       ),
     );
-  }
+  }*/
 
   Widget _buildActionButton(String title, IconData icon, Color color, VoidCallback onTap) {
     return GestureDetector(
@@ -315,7 +315,7 @@ class _OutletWalletScreenState extends State<OutletWalletScreen> {
             child: Row(
               children: [
                 const Text(
-                  'Recent Transactions',
+                  'Transactions History',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -505,7 +505,7 @@ class _OutletWalletScreenState extends State<OutletWalletScreen> {
     );
   }
 
-  Widget _buildFinancialSummary() {
+  /*Widget _buildFinancialSummary() {
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(16),
@@ -540,7 +540,7 @@ class _OutletWalletScreenState extends State<OutletWalletScreen> {
         ],
       ),
     );
-  }
+  }*/
 
   Widget _buildSummaryRow(String label, String amount, Color color, {bool isBold = false}) {
     return Padding(
