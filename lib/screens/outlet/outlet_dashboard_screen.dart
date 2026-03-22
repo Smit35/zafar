@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
-import '../../models/outlet.dart';
+import '../../models/outlet.dart' as outlet_model;
 import '../../models/user.dart';
 import '../../models/order.dart';
 import '../../providers/auth_provider.dart';
@@ -23,7 +23,7 @@ class OutletDashboardScreen extends StatefulWidget {
 class _OutletDashboardScreenState extends State<OutletDashboardScreen> {
   final ApiService _apiService = ApiService();
 
-  Outlet? _outlet;
+  outlet_model.Outlet? _outlet;
   User? _user;
   bool _isLoading = true;
   Map<String, dynamic>? _dashboardData;
@@ -44,7 +44,7 @@ class _OutletDashboardScreenState extends State<OutletDashboardScreen> {
 
       if (outletJson != null) {
         final outletData = jsonDecode(outletJson);
-        _outlet = Outlet.fromJson(outletData);
+        _outlet = outlet_model.Outlet.fromJson(outletData);
       }
 
       _user = authProvider.user;

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../models/order.dart';
 import '../../services/api_service.dart';
+import 'invoice_screen.dart';
 
 class OutletOrdersTab extends StatefulWidget {
   const OutletOrdersTab({super.key});
@@ -627,9 +628,9 @@ class _OutletOrdersTabState extends State<OutletOrdersTab> {
               width: double.infinity,
               child: OutlinedButton.icon(
                 onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Invoice functionality will be implemented soon'),
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => InvoiceScreen(orderId: order.id.toString()),
                     ),
                   );
                 },

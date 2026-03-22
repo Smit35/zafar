@@ -6,7 +6,7 @@ import '../models/order.dart';
 // import '../models/menu_item.dart'; // Commented out - unused import
 import '../models/driver.dart';
 import '../models/manifest.dart';
-import '../models/outlet.dart';
+import '../models/outlet.dart' as outlet_model;
 import '../models/inventory_item.dart';
 import '../models/cart_models.dart';
 
@@ -98,7 +98,7 @@ class ApiService {
         return {
           'success': true,
           'token': data['token'],
-          'outlet': Outlet.fromJson(data['outlet']),
+          'outlet': outlet_model.Outlet.fromJson(data['outlet']),
         };
       } else if (response.statusCode == 401) {
         return {
@@ -725,6 +725,32 @@ class ApiService {
         return {'success': false, 'message': 'Session expired'};
       } else {
         return {'success': false, 'message': 'Failed to load orders'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
+  // Get single outlet order details
+  Future<Map<String, dynamic>> getOutletOrderDetails(String orderId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl$apiVersion/outlet/orders/$orderId'),
+        headers: _headers,
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return {
+          'success': true,
+          'order': Order.fromJson(data['data']),
+        };
+      } else if (response.statusCode == 401) {
+        return {'success': false, 'message': 'Session expired'};
+      } else if (response.statusCode == 404) {
+        return {'success': false, 'message': 'Order not found'};
+      } else {
+        return {'success': false, 'message': 'Failed to load order details'};
       }
     } catch (e) {
       return {'success': false, 'message': 'Network error: ${e.toString()}'};
