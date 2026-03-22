@@ -530,21 +530,39 @@ class _OutletOrdersTabState extends State<OutletOrdersTab> {
                 ),
                 
                 // Delivery OTP (if available)
-                if (order.deliveryOtp != null) ...[
+                if (order.hasOtp && order.deliveryOtp != null) ...[
                   const SizedBox(height: 12),
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.orange[50],
+                      color: order.isOtpExpired 
+                          ? Colors.red[50] 
+                          : order.isOtpVerified 
+                              ? Colors.green[50] 
+                              : Colors.orange[50],
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.orange[200]!),
+                      border: Border.all(
+                        color: order.isOtpExpired 
+                            ? Colors.red[200]! 
+                            : order.isOtpVerified 
+                                ? Colors.green[200]! 
+                                : Colors.orange[200]!,
+                      ),
                     ),
                     child: Row(
                       children: [
                         Icon(
-                          Icons.security,
-                          color: Colors.orange[700],
+                          order.isOtpExpired 
+                              ? Icons.access_time 
+                              : order.isOtpVerified 
+                                  ? Icons.check_circle 
+                                  : Icons.security,
+                          color: order.isOtpExpired 
+                              ? Colors.red[700] 
+                              : order.isOtpVerified 
+                                  ? Colors.green[700] 
+                                  : Colors.orange[700],
                           size: 18,
                         ),
                         const SizedBox(width: 8),
@@ -553,7 +571,11 @@ class _OutletOrdersTabState extends State<OutletOrdersTab> {
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
-                            color: Colors.orange[700],
+                            color: order.isOtpExpired 
+                                ? Colors.red[700] 
+                                : order.isOtpVerified 
+                                    ? Colors.green[700] 
+                                    : Colors.orange[700],
                           ),
                         ),
                         Text(
@@ -561,10 +583,35 @@ class _OutletOrdersTabState extends State<OutletOrdersTab> {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: Colors.orange[700],
+                            color: order.isOtpExpired 
+                                ? Colors.red[700] 
+                                : order.isOtpVerified 
+                                    ? Colors.green[700] 
+                                    : Colors.orange[700],
                             letterSpacing: 2,
                           ),
                         ),
+                        if (order.isOtpExpired) ...[
+                          const Spacer(),
+                          Text(
+                            'EXPIRED',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.red[700],
+                            ),
+                          ),
+                        ] else if (order.isOtpVerified) ...[
+                          const Spacer(),
+                          Text(
+                            'VERIFIED',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green[700],
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),

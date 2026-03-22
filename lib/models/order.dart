@@ -66,7 +66,7 @@ class Order {
   final DateTime createdAt;
   final DateTime? deliveredAt;
   final DateTime? dispatchDate;
-  final String? deliveryOtp;
+  final Map<String, dynamic>? otp;
   final String? specialInstructions;
   final List<OrderItem> items;
   
@@ -85,7 +85,7 @@ class Order {
     required this.createdAt,
     this.deliveredAt,
     this.dispatchDate,
-    this.deliveryOtp,
+    this.otp,
     this.specialInstructions,
     this.items = const [],
   });
@@ -106,7 +106,7 @@ class Order {
       createdAt: DateTime.parse(json['created_at'] ?? DateTime.now().toIso8601String()),
       deliveredAt: json['delivered_at'] != null ? DateTime.parse(json['delivered_at']) : null,
       dispatchDate: json['dispatch_date'] != null ? DateTime.parse(json['dispatch_date']) : null,
-      deliveryOtp: json['delivery_otp'],
+      otp: json['otp'] is Map<String, dynamic> ? json['otp'] : null,
       specialInstructions: json['special_instructions'],
       items: (json['items'] as List?)
           ?.map((item) => OrderItem.fromJson(item))
@@ -136,6 +136,12 @@ class Order {
 
   // Getter for backward compatibility
   double get totalAmount => grandTotal;
+  
+  // OTP helper methods
+  String? get deliveryOtp => otp?['otp_hash'];
+  bool get hasOtp => otp != null && otp!['otp_hash'] != null;
+  bool get isOtpExpired => otp?['is_expired'] ?? true;
+  bool get isOtpVerified => otp?['is_verified'] ?? false;
   
   // Legacy properties for backward compatibility
   String get customerName => 'Customer';

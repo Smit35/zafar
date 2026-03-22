@@ -58,23 +58,62 @@ class _OutletOrderConfirmationScreenState extends State<OutletOrderConfirmationS
   Future<void> _launchUpiPayment() async {
     final upiSettings = _upiSettings;
     final orderNumber = widget.orderData['order_number'];
-    final amount = _paymentAmount;
+    final amount = _paymentAmount.toStringAsFixed(2);
     
-    final upiUri = "upi://pay?pa=${upiSettings['vpa']}&pn=${Uri.encodeComponent(upiSettings['merchant_name'] ?? 'Merchant')}&tr=$orderNumber&am=$amount&cu=INR";
+    // Create UPI URI following the format: upi://pay?pa=VPA&pn=NAME&tr=TXN_ID&am=AMOUNT&cu=INR
+    final merchantName = Uri.encodeComponent(upiSettings['merchant_name'] ?? 'Merchant');
+    final upiUri = "upi://pay?pa=${upiSettings['vpa']}&pn=$merchantName&tr=$orderNumber&am=$amount&cu=INR";
+    
+    print("Launching UPI URI: $upiUri"); // Debug print
     
     try {
       final uri = Uri.parse(upiUri);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri);
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('No UPI app found on your device'),
-              backgroundColor: Colors.red,
-            ),
+      
+      // Try launching with different modes
+      bool launched = false;
+      
+      // Method 1: Try with external application mode
+      try {
+        launched = await launchUrl(
+          uri,
+          mode: LaunchMode.externalApplication,
+        );
+      } catch (e) {
+        print("Method 1 failed: $e");
+      }
+      
+      // Method 2: Try with platform default mode if first method failed
+      if (!launched) {
+        try {
+          launched = await launchUrl(
+            uri,
+            mode: LaunchMode.platformDefault,
           );
+        } catch (e) {
+          print("Method 2 failed: $e");
         }
+      }
+      
+      // Method 3: Try with external non-browser mode if previous methods failed
+      if (!launched) {
+        try {
+          launched = await launchUrl(
+            uri,
+            mode: LaunchMode.externalNonBrowserApplication,
+          );
+        } catch (e) {
+          print("Method 3 failed: $e");
+        }
+      }
+      
+      if (!launched && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No UPI app found on your device. Please install a UPI app like PhonePe, Google Pay, or Paytm.'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 4),
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
@@ -601,28 +640,30 @@ class _OutletOrderConfirmationScreenState extends State<OutletOrderConfirmationS
                     ),
                   ),
                   const SizedBox(height: 12),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.network(
-                      '${ApiService.baseUrl}/storage/${upiSettings['qr_path']}',
-                      width: 150,
-                      height: 150,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          width: 150,
-                          height: 150,
-                          decoration: BoxDecoration(
-                            color: Colors.grey[200],
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Icon(
-                            Icons.qr_code,
-                            size: 60,
-                            color: Colors.grey[400],
-                          ),
-                        );
-                      },
+                  Center(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.network(
+                        '${ApiService.baseUrl}/storage/${upiSettings['qr_path']}',
+                        width: 150,
+                        height: 150,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            width: 150,
+                            height: 150,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[200],
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(
+                              Icons.qr_code,
+                              size: 60,
+                              color: Colors.grey[400],
+                            ),
+                          );
+                        },
+                      ),
                     ),
                   ),
                 ],
