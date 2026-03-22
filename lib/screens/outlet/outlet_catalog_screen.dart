@@ -560,12 +560,16 @@ class _OutletCatalogScreenState extends State<OutletCatalogScreen> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  GestureDetector(
+                  InkWell(
                     onTap: currentQuantity > 0 
                         ? () => _updateQuantity(item.id, -1)
                         : null,
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(8),
+                      bottomLeft: Radius.circular(8),
+                    ),
                     child: Container(
-                      padding: const EdgeInsets.all(8),
+                      padding: const EdgeInsets.all(16),
                       child: Icon(
                         Icons.remove,
                         size: 16,
@@ -587,12 +591,16 @@ class _OutletCatalogScreenState extends State<OutletCatalogScreen> {
                       ),
                     ),
                   ),
-                  GestureDetector(
+                  InkWell(
                     onTap: item.isInStock 
                         ? () => _updateQuantity(item.id, 1)
                         : null,
+                    borderRadius: const BorderRadius.only(
+                      topRight: Radius.circular(8),
+                      bottomRight: Radius.circular(8),
+                    ),
                     child: Container(
-                      padding: const EdgeInsets.all(8),
+                      padding: const EdgeInsets.all(16),
                       child: Icon(
                         Icons.add,
                         size: 16,
