@@ -5,7 +5,7 @@ class InventoryItem {
   final String sku;
   final String uom;
   final String price;
-  final String posPrice;
+  final dynamic posPrice;
   final String? description;
   final String? imagePath;
   final bool status;

@@ -621,30 +621,56 @@ class _OutletOrdersTabState extends State<OutletOrdersTab> {
             ),
           ),
           
-          // Invoice Button
+          // Action Buttons
           Container(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            child: SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => InvoiceScreen(orderId: order.id.toString()),
+            child: Column(
+              children: [
+                // Inward Button (conditional)
+                if (order.shouldShowInwardButton) ...[
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () => _showInwardDialog(order),
+                      icon: const Icon(Icons.input),
+                      label: const Text('Inward'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
                     ),
-                  );
-                },
-                icon: const Icon(Icons.receipt_outlined),
-                label: const Text('View Invoice'),
-                style: OutlinedButton.styleFrom(
-                  side: BorderSide(color: Colors.grey[400]!),
-                  foregroundColor: Colors.grey[700],
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+                
+                // Invoice Button
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => InvoiceScreen(orderId: order.id.toString()),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.receipt_outlined),
+                    label: const Text('View Invoice'),
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(color: Colors.grey[400]!),
+                      foregroundColor: Colors.grey[700],
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
                   ),
                 ),
-              ),
+              ],
             ),
           ),
         ],
@@ -652,4 +678,323 @@ class _OutletOrdersTabState extends State<OutletOrdersTab> {
     );
   }
 
+  void _showInwardDialog(Order order) {
+    showDialog(
+      context: context,
+      builder: (context) => InwardDialog(
+        order: order,
+        onInwardSuccess: () {
+          _loadOrders(); // Refresh orders list after successful inward
+        },
+      ),
+    );
+  }
+}
+
+class InwardDialog extends StatefulWidget {
+  final Order order;
+  final VoidCallback onInwardSuccess;
+
+  const InwardDialog({
+    super.key,
+    required this.order,
+    required this.onInwardSuccess,
+  });
+
+  @override
+  State<InwardDialog> createState() => _InwardDialogState();
+}
+
+class _InwardDialogState extends State<InwardDialog> {
+  final ApiService _apiService = ApiService();
+  final Map<int, TextEditingController> _quantityControllers = {};
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize controllers with current quantities for items that can be inwarded
+    for (final item in widget.order.items) {
+      if (!item.inwardLocked) {
+        _quantityControllers[item.id] = TextEditingController(
+          text: item.qtyOrdered.toStringAsFixed(0),
+        );
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    for (final controller in _quantityControllers.values) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  Future<void> _submitInward() async {
+    setState(() => _isLoading = true);
+
+    try {
+      // Build the items payload for the API
+      final List<Map<String, dynamic>> inwardItems = [];
+      
+      for (final item in widget.order.items) {
+        if (!item.inwardLocked && _quantityControllers.containsKey(item.id)) {
+          final controller = _quantityControllers[item.id]!;
+          final receivedQty = int.tryParse(controller.text) ?? 0;
+          
+          if (receivedQty > 0) {
+            inwardItems.add({
+              'order_item_id': item.id,
+              'received_qty': receivedQty,
+            });
+          }
+        }
+      }
+
+      if (inwardItems.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please enter valid quantities for at least one item'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      final response = await _apiService.inwardOrderItems(
+        widget.order.id.toString(),
+        inwardItems,
+      );
+
+      if (mounted) {
+        setState(() => _isLoading = false);
+
+        if (response['success']) {
+          Navigator.of(context).pop();
+          widget.onInwardSuccess();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(response['message'] ?? 'Items marked as inward successfully'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        } else {
+          String errorMessage = response['message'] ?? 'Failed to mark items as inward';
+          
+          // Check for detailed field errors (similar to change password)
+          if (response['errors'] != null) {
+            final errors = response['errors'] as Map<String, dynamic>;
+            final List<String> errorMessages = [];
+            
+            errors.forEach((field, messages) {
+              if (messages is List) {
+                errorMessages.addAll(messages.cast<String>());
+              }
+            });
+            
+            if (errorMessages.isNotEmpty) {
+              errorMessage = errorMessages.join('\n');
+            }
+          }
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(errorMessage),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final inwardableItems = widget.order.items.where((item) => !item.inwardLocked).toList();
+
+    return AlertDialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      title: Row(
+        children: [
+          const Icon(Icons.input, color: Colors.green),
+          const SizedBox(width: 8),
+          Text(
+            'Inward Items',
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+      content: SizedBox(
+        width: MediaQuery.of(context).size.width * 0.9,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Order: ${widget.order.orderNumber}',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey[700],
+              ),
+            ),
+            const SizedBox(height: 16),
+            
+            if (inwardableItems.isEmpty)
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.orange[50],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.orange[200]!),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.info, color: Colors.orange[600]),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'All items in this order have been locked for inward.',
+                        style: TextStyle(color: Colors.orange[700]),
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            else
+              ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.4,
+                ),
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: inwardableItems.map((item) {
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey[300]!),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              item.productName,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Ordered: ${item.qtyOrdered.toStringAsFixed(0)} ${item.uom}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Text(
+                                  'Received Qty:',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.grey[700],
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: TextField(
+                                    controller: _quantityControllers[item.id],
+                                    keyboardType: TextInputType.number,
+                                    decoration: InputDecoration(
+                                      hintText: 'Enter quantity',
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                        borderSide: BorderSide(color: Colors.grey[300]!),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                        borderSide: const BorderSide(color: Colors.green),
+                                      ),
+                                      contentPadding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 8,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _isLoading ? null : () => Navigator.pop(context),
+          child: Text(
+            'Cancel',
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.grey[600],
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        if (inwardableItems.isNotEmpty)
+          ElevatedButton(
+            onPressed: _isLoading ? null : _submitInward,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: _isLoading
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  )
+                : const Text(
+                    'Submit Inward',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+          ),
+      ],
+    );
+  }
 }

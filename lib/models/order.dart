@@ -13,6 +13,8 @@ class OrderItem {
   final double sgstAmount;
   final double igstAmount;
   final double lineTotal;
+  final String status;
+  final bool inwardLocked;
   
   OrderItem({
     required this.id,
@@ -29,6 +31,8 @@ class OrderItem {
     required this.sgstAmount,
     required this.igstAmount,
     required this.lineTotal,
+    required this.status,
+    required this.inwardLocked,
   });
   
   factory OrderItem.fromJson(Map<String, dynamic> json) {
@@ -47,6 +51,8 @@ class OrderItem {
       sgstAmount: double.parse(json['sgst_amount']?.toString() ?? '0'),
       igstAmount: double.parse(json['igst_amount']?.toString() ?? '0'),
       lineTotal: double.parse(json['line_total']?.toString() ?? '0'),
+      status: json['status'] ?? 'pending',
+      inwardLocked: json['inward_locked'] ?? false,
     );
   }
 }
@@ -258,4 +264,11 @@ class Order {
   String get customerPhone => '';
   String get deliveryAddress => '';
   String? get driverId => null;
+  
+  // Inward helper method
+  bool get shouldShowInwardButton {
+    // Show inward button if any item has inward_locked: false AND status is not 'delivered'
+    return status.toLowerCase() != 'delivered' && 
+           items.any((item) => !item.inwardLocked);
+  }
 }

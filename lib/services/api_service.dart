@@ -757,6 +757,43 @@ class ApiService {
     }
   }
 
+  // Inward order items
+  Future<Map<String, dynamic>> inwardOrderItems(String orderId, List<Map<String, dynamic>> items) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl$apiVersion/outlet/orders/$orderId/inward'),
+        headers: _headers,
+        body: jsonEncode({
+          'items': items,
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'message': data['message'] ?? 'Items marked as inward successfully',
+        };
+      } else if (response.statusCode == 401) {
+        return {'success': false, 'message': 'Session expired'};
+      } else if (response.statusCode == 422) {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Invalid data provided',
+          'errors': data['errors'],
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to mark items as inward',
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
   // Update outlet order status (accept/reject/prepare/ready)
   Future<Map<String, dynamic>> updateOutletOrderStatus(
     String orderId,
