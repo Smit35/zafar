@@ -9,6 +9,7 @@ import '../models/manifest.dart';
 import '../models/outlet.dart' as outlet_model;
 import '../models/inventory_item.dart';
 import '../models/cart_models.dart';
+import '../models/wallet_transaction.dart';
 
 class ApiService {
   static const String baseUrl =
@@ -1242,6 +1243,52 @@ class ApiService {
           'success': false,
           'message': data['message'] ?? 'Failed to clear cart',
         };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
+  // Get wallet transactions
+  Future<Map<String, dynamic>> getWalletTransactions({
+    String? type,
+    String? dateFrom,
+    String? dateTo,
+    int page = 1,
+    int perPage = 20,
+  }) async {
+    try {
+      var url = '$baseUrl$apiVersion/outlet/wallet/transactions?page=$page&per_page=$perPage';
+      if (type != null) {
+        url += '&type=$type';
+      }
+      if (dateFrom != null) {
+        url += '&date_from=$dateFrom';
+      }
+      if (dateTo != null) {
+        url += '&date_to=$dateTo';
+      }
+
+      final response = await http.get(
+        Uri.parse(url),
+        headers: _headers,
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final responseData = data['data'];
+        return {
+          'success': true,
+          'transactions': (responseData['transactions'] ?? [])
+              .map<WalletTransaction>((json) => WalletTransaction.fromJson(json))
+              .toList(),
+          'balance': responseData['balance'] ?? {},
+          'meta': data['meta'] ?? {},
+        };
+      } else if (response.statusCode == 401) {
+        return {'success': false, 'message': 'Session expired'};
+      } else {
+        return {'success': false, 'message': 'Failed to load transactions'};
       }
     } catch (e) {
       return {'success': false, 'message': 'Network error: ${e.toString()}'};

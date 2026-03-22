@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import '../../models/wallet_transaction.dart';
+import '../../services/api_service.dart';
 import 'outlet_notification_screen.dart';
-import 'outlet_report_screen.dart';
 
 class OutletWalletScreen extends StatefulWidget {
   const OutletWalletScreen({super.key});
@@ -10,46 +12,147 @@ class OutletWalletScreen extends StatefulWidget {
 }
 
 class _OutletWalletScreenState extends State<OutletWalletScreen> {
+  final ApiService _apiService = ApiService();
+  
+  List<WalletTransaction> _transactions = [];
+  bool _isLoading = false;
+  DateTime? _fromDate;
+  DateTime? _toDate;
+  String? _selectedType;
+  
+  // API data for balance
+  double _walletBalance = 0.00;
+  double _totalCredited = 0.00;
+  double _totalDebited = 0.00;
+  
+  @override
+  void initState() {
+    super.initState();
+    _initializeDates();
+    _loadTransactions();
+  }
+  
+  void _initializeDates() {
+    final now = DateTime.now();
+    _fromDate = DateTime(now.year, now.month, 1); // First day of current month
+    _toDate = now; // Today
+  }
+  
+  Future<void> _loadTransactions() async {
+    setState(() => _isLoading = true);
+    
+    try {
+      final dateFrom = _fromDate?.toIso8601String().split('T')[0];
+      final dateTo = _toDate?.toIso8601String().split('T')[0];
+      
+      final response = await _apiService.getWalletTransactions(
+        type: _selectedType,
+        dateFrom: dateFrom,
+        dateTo: dateTo,
+      );
+      
+      if (response['success'] && mounted) {
+        setState(() {
+          _transactions = response['transactions'] ?? [];
+          
+          // Update balance data from API response
+          if (response['balance'] != null) {
+            final balance = response['balance'];
+            _walletBalance = double.parse(balance['balance']?.toString() ?? '0');
+            _totalCredited = double.parse(balance['total_credited']?.toString() ?? '0');
+            _totalDebited = double.parse(balance['total_debited']?.toString() ?? '0');
+          }
+        });
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(response['message'] ?? 'Failed to load transactions'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // Wallet Balance Card
-            _buildWalletCard(),
-            
-            // // Quick Actions
-            // _buildQuickActions(),
-            
-            // Transaction History
-            _buildTransactionHistory(),
-            
-            // // Financial Summary
-            // _buildFinancialSummary(),
-          ],
-        ),
+      body: Column(
+        children: [
+          // Wallet Stats Cards
+          _buildWalletStatsCards(),
+          
+          // Filters
+          _buildFilters(),
+          
+          // Transaction Table
+          Expanded(
+            child: _buildTransactionTable(),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildWalletCard() {
+  Widget _buildWalletStatsCards() {
     return Container(
       margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(24),
+      child: Row(
+        children: [
+          Expanded(
+            child: _buildStatCard(
+              'Wallet Balance',
+              '₹${_walletBalance.toStringAsFixed(2)}',
+              Icons.account_balance_wallet,
+              Colors.orange[600]!,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: _buildStatCard(
+              'Total Credited',
+              '₹${_totalCredited.toStringAsFixed(2)}',
+              Icons.trending_up,
+              Colors.green[600]!,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: _buildStatCard(
+              'Total Debited',
+              '₹${_totalDebited.toStringAsFixed(2)}',
+              Icons.trending_down,
+              Colors.red[600]!,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatCard(String title, String amount, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.orange[400]!, Colors.orange[600]!],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.orange.withOpacity(0.3),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: Colors.grey.withValues(alpha: 0.1),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -58,15 +161,8 @@ class _OutletWalletScreenState extends State<OutletWalletScreen> {
         children: [
           Row(
             children: [
-              const Text(
-                'Wallet Balance',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const Spacer(),
+              Icon(icon, color: color, size: 20),
+              const SizedBox(width: 8),
               IconButton(
                 onPressed: () {
                   Navigator.push(
@@ -76,78 +172,200 @@ class _OutletWalletScreenState extends State<OutletWalletScreen> {
                     ),
                   );
                 },
-                icon: Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.notifications_outlined,
-                    color: Colors.white,
-                    size: 20,
-                  ),
+                icon: const Icon(
+                  Icons.notifications_outlined,
+                  color: Colors.grey,
+                  size: 18,
                 ),
               ),
             ],
           ),
           const SizedBox(height: 8),
-          const Text(
-            '₹25,480.50',
+          Text(
+            title,
             style: TextStyle(
-              color: Colors.white,
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
             ),
           ),
           const SizedBox(height: 4),
-          Row(
+          Text(
+            amount,
+            style: TextStyle(
+              color: color,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilters() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withValues(alpha: 0.1),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Filters',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Column(
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.trending_up,
-                      color: Colors.white,
-                      size: 14,
+              // Date Row
+              Row(
+                children: [
+                  // From Date
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'From Date',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.grey[700],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        GestureDetector(
+                          onTap: () => _selectFromDate(),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.grey[300]!),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.date_range, size: 20, color: Colors.grey[600]),
+                                const SizedBox(width: 8),
+                                Text(
+                                  _fromDate != null 
+                                      ? DateFormat('dd/MM/yyyy').format(_fromDate!)
+                                      : 'Select Date',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: _fromDate != null ? Colors.black87 : Colors.grey[600],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    SizedBox(width: 4),
-                    Text(
-                      '+12% this month',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
+                  ),
+                  const SizedBox(width: 12),
+                  // To Date
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'To Date',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.grey[700],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        GestureDetector(
+                          onTap: () => _selectToDate(),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.grey[300]!),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.date_range, size: 20, color: Colors.grey[600]),
+                                const SizedBox(width: 8),
+                                Text(
+                                  _toDate != null 
+                                      ? DateFormat('dd/MM/yyyy').format(_toDate!)
+                                      : 'Select Date',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: _toDate != null ? Colors.black87 : Colors.grey[600],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              // Type Dropdown Row
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Transaction Type',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.grey[700],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey[300]!),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        value: _selectedType,
+                        hint: Text(
+                          'Select Type',
+                          style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                        ),
+                        isExpanded: true,
+                        items: [
+                          const DropdownMenuItem(value: null, child: Text('All Transactions')),
+                          const DropdownMenuItem(value: 'credit', child: Text('Credit Only')),
+                          const DropdownMenuItem(value: 'debit', child: Text('Debit Only')),
+                        ],
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedType = value;
+                          });
+                          _loadTransactions();
+                        },
                       ),
                     ),
-                  ],
-                ),
-              ),
-              const Spacer(),
-              const Text(
-                'Last updated: Just now',
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 12,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Row(
-            children: [
-              Expanded(
-                child: _buildWalletStatCard('Today\'s Sales', '₹2,340', Icons.today),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildWalletStatCard('Pending', '₹480', Icons.hourglass_empty),
+                  ),
+                ],
               ),
             ],
           ),
@@ -156,41 +374,197 @@ class _OutletWalletScreenState extends State<OutletWalletScreen> {
     );
   }
 
-  Widget _buildWalletStatCard(String title, String amount, IconData icon) {
+  Future<void> _selectFromDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _fromDate ?? DateTime.now(),
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now(),
+    );
+    if (picked != null) {
+      setState(() {
+        _fromDate = picked;
+      });
+      _loadTransactions();
+    }
+  }
+
+  Future<void> _selectToDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _toDate ?? DateTime.now(),
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now(),
+    );
+    if (picked != null) {
+      setState(() {
+        _toDate = picked;
+      });
+      _loadTransactions();
+    }
+  }
+
+  Widget _buildTransactionTable() {
     return Container(
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.15),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withValues(alpha: 0.1),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(icon, color: Colors.white, size: 16),
-              const SizedBox(width: 8),
-              Expanded(
+          const Padding(
+            padding: EdgeInsets.all(16),
+            child: Text(
+              'Recent Transactions',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+          ),
+          if (_isLoading)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.all(32),
+                child: CircularProgressIndicator(),
+              ),
+            )
+          else if (_transactions.isEmpty)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.all(32),
                 child: Text(
-                  title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
+                  'No transactions found',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey,
                   ),
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            amount,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
+            )
+          else
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: SizedBox(
+                    width: MediaQuery.of(context).size.width - 32,
+                    child: SingleChildScrollView(
+                      child: DataTable(
+                        columnSpacing: 20,
+                        headingRowColor: WidgetStateProperty.all(Colors.grey[50]),
+                        columns: const [
+                          DataColumn(
+                            label: Text(
+                              'Date',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          DataColumn(
+                            label: Text(
+                              'Type',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          DataColumn(
+                            label: Text(
+                              'Source',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          DataColumn(
+                            label: Text(
+                              'Amount',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          DataColumn(
+                            label: Text(
+                              'Balance',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          DataColumn(
+                            label: Text(
+                              'Remarks',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ],
+                        rows: _transactions.map((transaction) {
+                          return DataRow(
+                            cells: [
+                              DataCell(
+                                Text(
+                                  DateFormat('dd/MM/yyyy').format(transaction.createdAt),
+                                  style: const TextStyle(fontSize: 12),
+                                ),
+                              ),
+                              DataCell(
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: transaction.isCredit ? Colors.green[50] : Colors.red[50],
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    transaction.type.toUpperCase(),
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: transaction.isCredit ? Colors.green[700] : Colors.red[700],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              DataCell(
+                                Text(
+                                  transaction.source.replaceAll('_', ' ').toUpperCase(),
+                                  style: const TextStyle(fontSize: 12),
+                                ),
+                              ),
+                              DataCell(
+                                Text(
+                                  '${transaction.isDebit ? '-' : ''}₹${transaction.amount.toStringAsFixed(2)}',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: transaction.isCredit ? Colors.green[700] : Colors.red[700],
+                                  ),
+                                ),
+                              ),
+                              DataCell(
+                                Text(
+                                  '₹${transaction.balanceAfter.toStringAsFixed(2)}',
+                                  style: const TextStyle(fontSize: 12),
+                                ),
+                              ),
+                              DataCell(
+                                Text(
+                                  transaction.remarks ?? '-',
+                                  style: const TextStyle(fontSize: 12),
+                                ),
+                              ),
+                            ],
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ),
-          ),
         ],
       ),
     );
