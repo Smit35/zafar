@@ -237,6 +237,46 @@ class ApiService {
     }
   }
 
+  // Change outlet password
+  Future<Map<String, dynamic>> changeOutletPassword({
+    required String currentPassword,
+    required String password,
+    required String passwordConfirmation,
+  }) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl$apiVersion/outlet/change-password'),
+        headers: _headers,
+        body: jsonEncode({
+          'current_password': currentPassword,
+          'password': password,
+          'password_confirmation': passwordConfirmation,
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {'success': true, 'message': 'Password changed successfully.'};
+      } else if (response.statusCode == 422) {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Current password is incorrect.',
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to change password.',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'No internet connection. Please check your network.',
+      };
+    }
+  }
+
   // Get driver orders with pagination
   Future<Map<String, dynamic>> getDriverOrders({
     required String tab,
