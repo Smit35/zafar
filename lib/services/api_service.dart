@@ -10,6 +10,7 @@ import '../models/outlet.dart' as outlet_model;
 import '../models/inventory_item.dart';
 import '../models/cart_models.dart';
 import '../models/wallet_transaction.dart';
+import '../models/return.dart';
 
 class ApiService {
   static const String baseUrl =
@@ -1289,6 +1290,55 @@ class ApiService {
         return {'success': false, 'message': 'Session expired'};
       } else {
         return {'success': false, 'message': 'Failed to load transactions'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
+  // Get outlet returns
+  Future<Map<String, dynamic>> getOutletReturns({
+    String? status,
+    String? search,
+    String? dateFrom,
+    String? dateTo,
+    int page = 1,
+    int perPage = 20,
+  }) async {
+    try {
+      var url = '$baseUrl$apiVersion/outlet/returns?page=$page&per_page=$perPage';
+      if (status != null) {
+        url += '&status=$status';
+      }
+      if (search != null && search.isNotEmpty) {
+        url += '&search=$search';
+      }
+      if (dateFrom != null) {
+        url += '&date_from=$dateFrom';
+      }
+      if (dateTo != null) {
+        url += '&date_to=$dateTo';
+      }
+
+      final response = await http.get(
+        Uri.parse(url),
+        headers: _headers,
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return {
+          'success': true,
+          'returns': (data['data'] ?? [])
+              .map<ReturnItem>((json) => ReturnItem.fromJson(json))
+              .toList(),
+          'stats': data['stats'] != null ? ReturnStats.fromJson(data['stats']) : null,
+          'meta': data['meta'] ?? {},
+        };
+      } else if (response.statusCode == 401) {
+        return {'success': false, 'message': 'Session expired'};
+      } else {
+        return {'success': false, 'message': 'Failed to load returns'};
       }
     } catch (e) {
       return {'success': false, 'message': 'Network error: ${e.toString()}'};
