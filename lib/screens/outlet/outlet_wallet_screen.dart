@@ -159,28 +159,28 @@ class _OutletWalletScreenState extends State<OutletWalletScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(icon, color: color, size: 20),
-              const SizedBox(width: 8),
-              IconButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const OutletNotificationScreen(),
-                    ),
-                  );
-                },
-                icon: const Icon(
-                  Icons.notifications_outlined,
-                  color: Colors.grey,
-                  size: 18,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
+          // Row(
+          //   children: [
+          //     Icon(icon, color: color, size: 20),
+          //     const SizedBox(width: 8),
+          //     IconButton(
+          //       onPressed: () {
+          //         Navigator.push(
+          //           context,
+          //           MaterialPageRoute(
+          //             builder: (context) => const OutletNotificationScreen(),
+          //           ),
+          //         );
+          //       },
+          //       icon: const Icon(
+          //         Icons.notifications_outlined,
+          //         color: Colors.grey,
+          //         size: 18,
+          //       ),
+          //     ),
+          //   ],
+          // ),
+          // const SizedBox(height: 8),
           Text(
             title,
             style: TextStyle(
