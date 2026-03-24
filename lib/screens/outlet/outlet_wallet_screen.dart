@@ -454,113 +454,107 @@ class _OutletWalletScreenState extends State<OutletWalletScreen> {
             )
           else
             Expanded(
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 8),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
                 child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: SizedBox(
-                    width: MediaQuery.of(context).size.width - 32,
-                    child: SingleChildScrollView(
-                      child: DataTable(
-                        columnSpacing: 20,
-                        headingRowColor: WidgetStateProperty.all(Colors.grey[50]),
-                        columns: const [
-                          DataColumn(
-                            label: Text(
-                              'Date',
-                              style: TextStyle(fontWeight: FontWeight.bold),
+                  child: DataTable(
+                    columnSpacing: 20,
+                    headingRowColor: WidgetStateProperty.all(Colors.grey[50]),
+                    columns: const [
+                      DataColumn(
+                        label: Text(
+                          'Date',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      DataColumn(
+                        label: Text(
+                          'Type',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      DataColumn(
+                        label: Text(
+                          'Source',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      DataColumn(
+                        label: Text(
+                          'Amount',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      DataColumn(
+                        label: Text(
+                          'Balance',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      DataColumn(
+                        label: Text(
+                          'Remarks',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
+                    rows: _transactions.map((transaction) {
+                      return DataRow(
+                        cells: [
+                          DataCell(
+                            Text(
+                              DateFormat('dd/MM/yyyy').format(transaction.createdAt),
+                              style: const TextStyle(fontSize: 12),
                             ),
                           ),
-                          DataColumn(
-                            label: Text(
-                              'Type',
-                              style: TextStyle(fontWeight: FontWeight.bold),
+                          DataCell(
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: transaction.isCredit ? Colors.green[50] : Colors.red[50],
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                transaction.type.toUpperCase(),
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: transaction.isCredit ? Colors.green[700] : Colors.red[700],
+                                ),
+                              ),
                             ),
                           ),
-                          DataColumn(
-                            label: Text(
-                              'Source',
-                              style: TextStyle(fontWeight: FontWeight.bold),
+                          DataCell(
+                            Text(
+                              transaction.source.replaceAll('_', ' ').toUpperCase(),
+                              style: const TextStyle(fontSize: 12),
                             ),
                           ),
-                          DataColumn(
-                            label: Text(
-                              'Amount',
-                              style: TextStyle(fontWeight: FontWeight.bold),
+                          DataCell(
+                            Text(
+                              '${transaction.isDebit ? '-' : ''}₹${transaction.amount.toStringAsFixed(2)}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: transaction.isCredit ? Colors.green[700] : Colors.red[700],
+                              ),
                             ),
                           ),
-                          DataColumn(
-                            label: Text(
-                              'Balance',
-                              style: TextStyle(fontWeight: FontWeight.bold),
+                          DataCell(
+                            Text(
+                              '₹${transaction.balanceAfter.toStringAsFixed(2)}',
+                              style: const TextStyle(fontSize: 12),
                             ),
                           ),
-                          DataColumn(
-                            label: Text(
-                              'Remarks',
-                              style: TextStyle(fontWeight: FontWeight.bold),
+                          DataCell(
+                            Text(
+                              transaction.remarks ?? '-',
+                              style: const TextStyle(fontSize: 12),
                             ),
                           ),
                         ],
-                        rows: _transactions.map((transaction) {
-                          return DataRow(
-                            cells: [
-                              DataCell(
-                                Text(
-                                  DateFormat('dd/MM/yyyy').format(transaction.createdAt),
-                                  style: const TextStyle(fontSize: 12),
-                                ),
-                              ),
-                              DataCell(
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: transaction.isCredit ? Colors.green[50] : Colors.red[50],
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Text(
-                                    transaction.type.toUpperCase(),
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.bold,
-                                      color: transaction.isCredit ? Colors.green[700] : Colors.red[700],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              DataCell(
-                                Text(
-                                  transaction.source.replaceAll('_', ' ').toUpperCase(),
-                                  style: const TextStyle(fontSize: 12),
-                                ),
-                              ),
-                              DataCell(
-                                Text(
-                                  '${transaction.isDebit ? '-' : ''}₹${transaction.amount.toStringAsFixed(2)}',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                    color: transaction.isCredit ? Colors.green[700] : Colors.red[700],
-                                  ),
-                                ),
-                              ),
-                              DataCell(
-                                Text(
-                                  '₹${transaction.balanceAfter.toStringAsFixed(2)}',
-                                  style: const TextStyle(fontSize: 12),
-                                ),
-                              ),
-                              DataCell(
-                                Text(
-                                  transaction.remarks ?? '-',
-                                  style: const TextStyle(fontSize: 12),
-                                ),
-                              ),
-                            ],
-                          );
-                        }).toList(),
-                      ),
-                    ),
+                      );
+                    }).toList(),
                   ),
                 ),
               ),

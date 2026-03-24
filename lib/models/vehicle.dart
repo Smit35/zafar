@@ -5,14 +5,14 @@ class Vehicle {
   final String vehicleType;
   final String? make;
   final String? model;
-  final int? manufactureYear;
+  final dynamic manufactureYear;
   final String? color;
   final String fuelType;
   final dynamic capacityKg;
   final String? vehiclePhoto;
   final String? gpsTrackerId;
   final bool status;
-  final int createdBy;
+  final dynamic createdBy;
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? deletedAt;

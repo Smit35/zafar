@@ -865,9 +865,11 @@ class _OutletCartScreenState extends State<OutletCartScreen> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
-                  child: const Text(
-                    'Proceed',
-                    style: TextStyle(color: Colors.white),
+                  child: Text(
+                    useWallet && (_total - walletAmountToUse) <= 0 
+                      ? 'Place Order' 
+                      : 'Proceed',
+                    style: const TextStyle(color: Colors.white),
                   ),
                 ),
               ],
@@ -880,6 +882,7 @@ class _OutletCartScreenState extends State<OutletCartScreen> {
 
   Future<void> _proceedToPlaceOrder(DateTime dispatchDate, String notes, double walletAmount) async {
     try {
+      print("885 wallet amt: $walletAmount");
       final result = await _apiService.placeOutletOrder(
         dispatchDate: dispatchDate,
         notes: notes.isEmpty ? null : notes,
@@ -888,14 +891,34 @@ class _OutletCartScreenState extends State<OutletCartScreen> {
 
       if (mounted) {
         if (result['success']) {
-          // Navigate to order confirmation/image upload screen
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(
-              builder: (context) => OutletOrderConfirmationScreen(
-                orderData: result['data'],
+          final orderData = result['data'];
+          final grandTotal = double.tryParse(orderData['grand_total']?.toString() ?? '0') ?? 0;
+          final walletUsed = double.tryParse(orderData['wallet_amount_used']?.toString() ?? '0') ?? 0;
+          final paymentAmount = grandTotal - walletUsed;
+          print("885 pymt amt: $paymentAmount");
+
+          // If wallet covers full amount, show success message and navigate back to catalog
+          if (paymentAmount <= 0.01) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Order placed successfully using wallet balance! Order #${orderData['order_number'] ?? 'N/A'}'),
+                backgroundColor: Colors.green,
+                duration: const Duration(seconds: 3),
               ),
-            ),
-          );
+            );
+            
+            // Navigate back to catalog screen (pop all screens until main outlet screen)
+            Navigator.of(context).popUntil((route) => route.isFirst);
+          } else {
+            // Navigate to order confirmation/image upload screen for payment
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(
+                builder: (context) => OutletOrderConfirmationScreen(
+                  orderData: orderData,
+                ),
+              ),
+            );
+          }
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(

@@ -23,7 +23,14 @@ class _OutletStockScreenState extends State<OutletStockScreen> {
   @override
   void initState() {
     super.initState();
+    _initializeDates();
     _loadReturns();
+  }
+
+  void _initializeDates() {
+    final now = DateTime.now();
+    _fromDate = DateTime(now.year, now.month, 1); // First day of current month
+    _toDate = now; // Today
   }
 
   @override

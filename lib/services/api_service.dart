@@ -1302,11 +1302,9 @@ class ApiService {
     String? search,
     String? dateFrom,
     String? dateTo,
-    int page = 1,
-    int perPage = 20,
   }) async {
     try {
-      var url = '$baseUrl$apiVersion/outlet/returns?page=$page&per_page=$perPage';
+      var url = '$baseUrl$apiVersion/outlet/returns';
       if (status != null) {
         url += '&status=$status';
       }
