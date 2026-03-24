@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/return.dart';
 import '../../services/api_service.dart';
+import 'eligible_orders_screen.dart';
 
 class OutletReturnScreen extends StatefulWidget {
   const OutletReturnScreen({super.key});
@@ -291,6 +292,29 @@ class _OutletReturnScreenState extends State<OutletReturnScreen> {
               ),
             ],
           ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: _openReportDamageScreen,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange[600],
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              icon: const Icon(Icons.report_problem),
+              label: const Text(
+                'Report Damage/Return',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -493,6 +517,15 @@ class _OutletReturnScreenState extends State<OutletReturnScreen> {
       });
       _filterReturns();
     }
+  }
+
+  void _openReportDamageScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const EligibleOrdersScreen(),
+      ),
+    );
   }
 
 }

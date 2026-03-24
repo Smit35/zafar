@@ -1343,6 +1343,121 @@ class ApiService {
     }
   }
 
+  // Get eligible orders for returns
+  Future<Map<String, dynamic>> getEligibleOrdersForReturn() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/outlet/returns/eligible-orders'),
+        headers: _headers,
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return {
+          'success': true,
+          'orders': data['orders'] ?? [],
+        };
+      } else if (response.statusCode == 401) {
+        return {'success': false, 'message': 'Session expired'};
+      } else {
+        return {'success': false, 'message': 'Failed to load eligible orders'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
+  // Get order details for return
+  Future<Map<String, dynamic>> getOrderForReturn(int orderId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/outlet/orders/$orderId/returns/create'),
+        headers: _headers,
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return {
+          'success': true,
+          'can_return': data['can_return'] ?? false,
+          'hours_remaining': data['hours_remaining']?.toDouble() ?? 0.0,
+          'order': data['order'],
+          'items': data['items'] ?? [],
+        };
+      } else if (response.statusCode == 401) {
+        return {'success': false, 'message': 'Session expired'};
+      } else {
+        return {'success': false, 'message': 'Failed to load order details'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
+  // Submit return request
+  Future<Map<String, dynamic>> submitReturnRequest({
+    required int orderId,
+    required List<Map<String, dynamic>> items,
+  }) async {
+    try {
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse('$baseUrl/outlet/orders/$orderId/returns'),
+      );
+
+      // Add headers
+      if (_token != null) {
+        request.headers['Authorization'] = 'Bearer $_token';
+      }
+      request.headers['Accept'] = 'application/json';
+
+      // Add items data
+      for (int i = 0; i < items.length; i++) {
+        final item = items[i];
+        request.fields['items[$i][order_item_id]'] = item['order_item_id'].toString();
+        request.fields['items[$i][returned_qty]'] = item['returned_qty'].toString();
+        request.fields['items[$i][rejection_reason]'] = item['rejection_reason'];
+        request.fields['items[$i][outlet_remarks]'] = item['outlet_remarks'];
+
+        // Add photos if provided
+        if (item['photos'] != null && (item['photos'] as List).isNotEmpty) {
+          for (int j = 0; j < (item['photos'] as List).length; j++) {
+            final photo = item['photos'][j];
+            if (photo is File) {
+              request.files.add(
+                await http.MultipartFile.fromPath(
+                  'items[$i][photos][$j]',
+                  photo.path,
+                ),
+              );
+            }
+          }
+        }
+      }
+
+      final response = await request.send();
+      final responseData = await response.stream.bytesToString();
+      final data = jsonDecode(responseData);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return {
+          'success': true,
+          'message': data['message'] ?? 'Return request submitted successfully',
+          'data': data,
+        };
+      } else if (response.statusCode == 401) {
+        return {'success': false, 'message': 'Session expired'};
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to submit return request',
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
   // Commented out - unused mock data helper
   // List<Order> _getMockOrders(String status) {
   //   final mockOrders = <Order>[];
