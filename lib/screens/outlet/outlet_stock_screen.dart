@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import '../../models/return.dart';
 import '../../services/api_service.dart';
 
-class OutletStockScreen extends StatefulWidget {
-  const OutletStockScreen({super.key});
+class OutletReturnScreen extends StatefulWidget {
+  const OutletReturnScreen({super.key});
 
   @override
-  State<OutletStockScreen> createState() => _OutletStockScreenState();
+  State<OutletReturnScreen> createState() => _OutletReturnScreenState();
 }
 
-class _OutletStockScreenState extends State<OutletStockScreen> {
+class _OutletReturnScreenState extends State<OutletReturnScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _selectedStatus = 'All';
   DateTime? _fromDate;

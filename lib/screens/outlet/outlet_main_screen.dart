@@ -24,7 +24,7 @@ class _OutletMainScreenState extends State<OutletMainScreen> {
     const OutletHomeTab(),
     const OutletCatalogScreen(),
     const OutletOrdersTab(),
-    const OutletStockScreen(),
+    const OutletReturnScreen(),
     const OutletWalletScreen(),
   ];
 
@@ -32,7 +32,7 @@ class _OutletMainScreenState extends State<OutletMainScreen> {
     'Home',
     'Catalog',
     'Orders',
-    'Stock',
+    'Return',
     'Wallet',
   ];
 
@@ -172,7 +172,7 @@ class _OutletMainScreenState extends State<OutletMainScreen> {
             BottomNavigationBarItem(
               icon: Icon(Icons.inventory_outlined),
               activeIcon: Icon(Icons.inventory),
-              label: 'Stock',
+              label: 'Return',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.account_balance_wallet_outlined),
