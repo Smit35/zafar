@@ -17,7 +17,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _isPasswordVisible = false;
-  bool _isDriver = true; // true for driver, false for outlet
+  bool _isDriver = false; // Default to outlet, driver accessed via link
 
   @override
   void dispose() {
@@ -63,11 +63,11 @@ class _LoginScreenState extends State<LoginScreen> {
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.orange[600],
+                  color: Colors.blueGrey[700],
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.orange.withOpacity(0.3),
+                      color: Colors.blueGrey.withOpacity(0.3),
                       spreadRadius: 2,
                       blurRadius: 10,
                       offset: const Offset(0, 2),
@@ -123,102 +123,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           color: Colors.grey[800],
                         ),
                       ),
-                      const SizedBox(height: 16),
-                      Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: Colors.grey[200],
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    _isDriver = true;
-                                  });
-                                },
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 12,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: _isDriver
-                                        ? Colors.orange[600]
-                                        : Colors.transparent,
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        Icons.local_shipping,
-                                        size: 18,
-                                        color: _isDriver
-                                            ? Colors.white
-                                            : Colors.grey[600],
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        'Driver',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w600,
-                                          color: _isDriver
-                                              ? Colors.white
-                                              : Colors.grey[600],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              child: GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    _isDriver = false;
-                                  });
-                                },
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 12,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: !_isDriver
-                                        ? Colors.orange[600]
-                                        : Colors.transparent,
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        Icons.store,
-                                        size: 18,
-                                        color: !_isDriver
-                                            ? Colors.white
-                                            : Colors.grey[600],
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        'Outlet',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w600,
-                                          color: !_isDriver
-                                              ? Colors.white
-                                              : Colors.grey[600],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
                       const SizedBox(height: 24),
                       TextFormField(
                         controller: _emailController,
@@ -233,7 +137,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide(
-                              color: Colors.orange[600]!,
+                              color: Colors.blueGrey[700]!,
                               width: 2,
                             ),
                           ),
@@ -279,7 +183,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide(
-                              color: Colors.orange[600]!,
+                              color: Colors.blueGrey[700]!,
                               width: 2,
                             ),
                           ),
@@ -341,7 +245,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                       ? null
                                       : _login,
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.orange[600],
+                                    backgroundColor: Colors.blueGrey[700],
                                     foregroundColor: Colors.white,
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(12),
@@ -364,6 +268,25 @@ class _LoginScreenState extends State<LoginScreen> {
                                             fontWeight: FontWeight.w600,
                                           ),
                                         ),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              Center(
+                                child: GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      _isDriver = !_isDriver;
+                                    });
+                                  },
+                                  child: Text(
+                                    _isDriver ? 'Login as Outlet' : 'Login as Driver',
+                                    style: TextStyle(
+                                      color: Colors.blueGrey[600],
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                      decoration: TextDecoration.underline,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ],

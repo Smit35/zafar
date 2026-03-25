@@ -1347,7 +1347,7 @@ class ApiService {
   Future<Map<String, dynamic>> getEligibleOrdersForReturn() async {
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl/outlet/returns/eligible-orders'),
+        Uri.parse('$baseUrl$apiVersion/outlet/returns/eligible-orders'),
         headers: _headers,
       );
 
