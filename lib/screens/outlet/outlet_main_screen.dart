@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'outlet_home_tab.dart';
 import 'outlet_catalog_screen.dart';
 import 'outlet_orders_tab.dart';
+import 'outlet_stock_management_screen.dart';
 import 'outlet_stock_screen.dart';
 import 'outlet_wallet_screen.dart';
 import 'outlet_profile_screen.dart';
@@ -24,6 +25,7 @@ class _OutletMainScreenState extends State<OutletMainScreen> {
     const OutletHomeTab(),
     const OutletCatalogScreen(),
     const OutletOrdersTab(),
+    const OutletStockManagementScreen(),
     const OutletReturnScreen(),
     const OutletWalletScreen(),
   ];
@@ -32,6 +34,7 @@ class _OutletMainScreenState extends State<OutletMainScreen> {
     'Home',
     'Catalog',
     'Orders',
+    'Stock',
     'Return',
     'Wallet',
   ];
@@ -168,6 +171,11 @@ class _OutletMainScreenState extends State<OutletMainScreen> {
               icon: Icon(Icons.assignment_outlined),
               activeIcon: Icon(Icons.assignment),
               label: 'Orders',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.warehouse_outlined),
+              activeIcon: Icon(Icons.warehouse),
+              label: 'Stock',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.inventory_outlined),
