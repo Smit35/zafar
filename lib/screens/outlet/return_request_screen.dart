@@ -30,12 +30,20 @@ class _ReturnRequestScreenState extends State<ReturnRequestScreen> {
   String? _errorMessage;
 
   final List<String> _returnReasons = [
-    'Product Damaged/Defective',
-    'Near Expiry/Expired',
-    'Received wrong item',
-    'Quality issue',
-    'Other',
+    'damaged',
+    'expired',
+    'wrong_product',
+    'quality_issue',
+    'other',
   ];
+
+  final Map<String, String> _reasonLabels = {
+    'damaged': 'Product Damaged/Defective',
+    'expired': 'Near Expiry/Expired',
+    'wrong_product': 'Received wrong item',
+    'quality_issue': 'Quality issue',
+    'other': 'Other Reason',
+  };
 
   @override
   void initState() {
@@ -344,11 +352,9 @@ class _ReturnRequestScreenState extends State<ReturnRequestScreen> {
                         ),
                         onChanged: (value) {
                           final qty = double.tryParse(value) ?? 0.0;
-                          if (qty <= maxQty) {
-                            setState(() {
-                              item['returned_qty'] = qty;
-                            });
-                          }
+                          setState(() {
+                            item['returned_qty'] = qty;
+                          });
                         },
                       ),
                     ],
@@ -384,7 +390,7 @@ class _ReturnRequestScreenState extends State<ReturnRequestScreen> {
                           return DropdownMenuItem(
                             value: reason,
                             child: Text(
-                              reason,
+                              _reasonLabels[reason] ?? reason,
                               style: const TextStyle(fontSize: 14),
                             ),
                           );
@@ -403,36 +409,38 @@ class _ReturnRequestScreenState extends State<ReturnRequestScreen> {
             
             const SizedBox(height: 16),
             
-            // Remarks
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Additional Details',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TextFormField(
-                  maxLines: 2,
-                  decoration: InputDecoration(
-                    hintText: 'Describe the issue in detail...',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: Colors.grey[300]!),
+            // Conditional Detailed Remarks for "other" reason
+            if (item['rejection_reason'] == 'other')
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Detailed Remarks *',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
                     ),
-                    contentPadding: const EdgeInsets.all(12),
                   ),
-                  onChanged: (value) {
-                    setState(() {
-                      item['outlet_remarks'] = value;
-                    });
-                  },
-                ),
-              ],
-            ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    maxLines: 2,
+                    decoration: InputDecoration(
+                      hintText: 'Please describe the issue in detail...',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Colors.grey[300]!),
+                      ),
+                      contentPadding: const EdgeInsets.all(12),
+                    ),
+                    onChanged: (value) {
+                      setState(() {
+                        item['outlet_remarks'] = value;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                ],
+              ),
             
             const SizedBox(height: 16),
             
@@ -451,13 +459,13 @@ class _ReturnRequestScreenState extends State<ReturnRequestScreen> {
                       ),
                     ),
                     TextButton.icon(
-                      onPressed: () => _pickImage(index),
+                      onPressed: (item['photos'] as List).length < 5 ? () => _pickImage(index) : null,
                       style: TextButton.styleFrom(
                         foregroundColor: Colors.orange[600],
                         padding: const EdgeInsets.symmetric(horizontal: 8),
                       ),
                       icon: const Icon(Icons.add_a_photo, size: 18),
-                      label: const Text('Add Photo'),
+                      label: Text('Add Photo (${(item['photos'] as List).length}/5)'),
                     ),
                   ],
                 ),
@@ -545,11 +553,7 @@ class _ReturnRequestScreenState extends State<ReturnRequestScreen> {
   }
 
   Widget _buildSubmitButton() {
-    final hasItemsToReturn = _returnItems.any((item) => 
-      item['returned_qty'] > 0 && 
-      item['outlet_remarks'].toString().isNotEmpty &&
-      (item['photos'] as List).isNotEmpty
-    );
+    final hasItemsToReturn = _returnItems.any((item) => item['returned_qty'] > 0);
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -599,6 +603,18 @@ class _ReturnRequestScreenState extends State<ReturnRequestScreen> {
   }
 
   Future<void> _pickImage(int itemIndex) async {
+    final photos = _returnItems[itemIndex]['photos'] as List<File>;
+    
+    if (photos.length >= 5) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Maximum 5 photos allowed per item'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+    
     try {
       final XFile? image = await _picker.pickImage(
         source: ImageSource.camera,
@@ -609,7 +625,7 @@ class _ReturnRequestScreenState extends State<ReturnRequestScreen> {
       
       if (image != null) {
         setState(() {
-          (_returnItems[itemIndex]['photos'] as List<File>).add(File(image.path));
+          photos.add(File(image.path));
         });
       }
     } catch (e) {
@@ -629,6 +645,18 @@ class _ReturnRequestScreenState extends State<ReturnRequestScreen> {
   }
 
   Future<void> _submitReturnRequest() async {
+    // Validate quantities and requirements before submission
+    String? validationError = _validateReturnRequest();
+    if (validationError != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(validationError),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+    
     setState(() {
       _isSubmitting = true;
     });
@@ -636,33 +664,27 @@ class _ReturnRequestScreenState extends State<ReturnRequestScreen> {
     try {
       // Filter only items that have return quantity > 0
       final itemsToReturn = _returnItems.where((item) => 
-        item['returned_qty'] > 0 &&
-        item['outlet_remarks'].toString().isNotEmpty &&
-        (item['photos'] as List).isNotEmpty
+        item['returned_qty'] > 0
       ).map((item) => {
         'order_item_id': item['order_item_id'],
         'returned_qty': item['returned_qty'],
         'rejection_reason': item['rejection_reason'],
-        'outlet_remarks': item['outlet_remarks'],
-        'photos': item['photos'],
+        if (item['rejection_reason'] == 'other')
+          'outlet_remarks': item['outlet_remarks'],
       }).toList();
 
-      if (itemsToReturn.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please select items to return with quantity, reason, and photos'),
-            backgroundColor: Colors.orange,
-          ),
-        );
-        setState(() {
-          _isSubmitting = false;
-        });
-        return;
+      // Collect all photos
+      List<File> allPhotos = [];
+      for (var item in _returnItems) {
+        if (item['returned_qty'] > 0) {
+          allPhotos.addAll(item['photos'] as List<File>);
+        }
       }
 
       final response = await _apiService.submitReturnRequest(
         orderId: widget.orderId,
         items: itemsToReturn,
+        photos: allPhotos,
       );
 
       if (response['success']) {
@@ -673,13 +695,7 @@ class _ReturnRequestScreenState extends State<ReturnRequestScreen> {
           ),
         );
         
-        // Navigate back to returns screen
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(
-            builder: (context) => const OutletReturnScreen(),
-          ),
-          (route) => route.settings.name == '/outlet_home',
-        );
+        Navigator.of(context).pop();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -700,5 +716,37 @@ class _ReturnRequestScreenState extends State<ReturnRequestScreen> {
         _isSubmitting = false;
       });
     }
+  }
+
+  String? _validateReturnRequest() {
+    final itemsWithQty = _returnItems.where((item) => item['returned_qty'] > 0).toList();
+    
+    if (itemsWithQty.isEmpty) {
+      return 'Please select at least one item to return';
+    }
+    
+    for (var item in itemsWithQty) {
+      final qty = item['returned_qty'] as double;
+      final maxQty = item['qty_ordered'] as double;
+      
+      // Check quantity limit
+      if (qty > maxQty) {
+        return 'Return quantity must be less than or equal to $maxQty';
+      }
+      
+      // Check photos requirement (at least 1, max 5)
+      final photos = item['photos'] as List<File>;
+      if (photos.isEmpty) {
+        return 'At least one photo is required for each returned item';
+      }
+      
+      // Check "other" reason remarks requirement
+      if (item['rejection_reason'] == 'other' && 
+          (item['outlet_remarks'] == null || item['outlet_remarks'].toString().trim().isEmpty)) {
+        return 'Detailed remarks are required when "Other Reason" is selected';
+      }
+    }
+    
+    return null;
   }
 }

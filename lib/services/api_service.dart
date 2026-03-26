@@ -1305,17 +1305,23 @@ class ApiService {
   }) async {
     try {
       var url = '$baseUrl$apiVersion/outlet/returns';
+      var queryParams = <String>[];
+      
       if (status != null) {
-        url += '&status=$status';
+        queryParams.add('status=$status');
       }
       if (search != null && search.isNotEmpty) {
-        url += '&search=$search';
+        queryParams.add('search=$search');
       }
       if (dateFrom != null) {
-        url += '&date_from=$dateFrom';
+        queryParams.add('date_from=$dateFrom');
       }
       if (dateTo != null) {
-        url += '&date_to=$dateTo';
+        queryParams.add('date_to=$dateTo');
+      }
+      
+      if (queryParams.isNotEmpty) {
+        url += '?${queryParams.join('&')}';
       }
 
       final response = await http.get(
@@ -1355,7 +1361,7 @@ class ApiService {
         final data = jsonDecode(response.body);
         return {
           'success': true,
-          'orders': data['orders'] ?? [],
+          'orders': data['data'] ?? [],
         };
       } else if (response.statusCode == 401) {
         return {'success': false, 'message': 'Session expired'};
@@ -1371,7 +1377,7 @@ class ApiService {
   Future<Map<String, dynamic>> getOrderForReturn(int orderId) async {
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl/outlet/orders/$orderId/returns/create'),
+        Uri.parse('$baseUrl$apiVersion/outlet/orders/$orderId/returns/create'),
         headers: _headers,
       );
 
@@ -1394,15 +1400,66 @@ class ApiService {
     }
   }
 
+  // Get return details by return ID
+  Future<Map<String, dynamic>> getReturnDetails(int returnId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl$apiVersion/outlet/returns/$returnId'),
+        headers: _headers,
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return {
+          'success': true,
+          'data': data['data'],
+        };
+      } else if (response.statusCode == 401) {
+        return {'success': false, 'message': 'Session expired'};
+      } else {
+        return {'success': false, 'message': 'Failed to load return details'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
+  // Get return details by order ID (for existing returns)
+  Future<Map<String, dynamic>> getReturnDetailsByOrderId(int orderId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl$apiVersion/outlet/orders/$orderId/returns'),
+        headers: _headers,
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return {
+          'success': true,
+          'data': data['data'],
+        };
+      } else if (response.statusCode == 401) {
+        return {'success': false, 'message': 'Session expired'};
+      } else if (response.statusCode == 404) {
+        return {'success': false, 'message': 'No return found for this order'};
+      } else {
+        return {'success': false, 'message': 'Failed to load return details'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
   // Submit return request
   Future<Map<String, dynamic>> submitReturnRequest({
     required int orderId,
     required List<Map<String, dynamic>> items,
+    List<File>? photos,
   }) async {
     try {
       var request = http.MultipartRequest(
         'POST',
-        Uri.parse('$baseUrl/outlet/orders/$orderId/returns'),
+        Uri.parse('$baseUrl$apiVersion/outlet/returns'),
       );
 
       // Add headers
@@ -1410,6 +1467,9 @@ class ApiService {
         request.headers['Authorization'] = 'Bearer $_token';
       }
       request.headers['Accept'] = 'application/json';
+      
+      // Add order_id
+      request.fields['order_id'] = orderId.toString();
 
       // Add items data
       for (int i = 0; i < items.length; i++) {
@@ -1417,21 +1477,20 @@ class ApiService {
         request.fields['items[$i][order_item_id]'] = item['order_item_id'].toString();
         request.fields['items[$i][returned_qty]'] = item['returned_qty'].toString();
         request.fields['items[$i][rejection_reason]'] = item['rejection_reason'];
-        request.fields['items[$i][outlet_remarks]'] = item['outlet_remarks'];
-
-        // Add photos if provided
-        if (item['photos'] != null && (item['photos'] as List).isNotEmpty) {
-          for (int j = 0; j < (item['photos'] as List).length; j++) {
-            final photo = item['photos'][j];
-            if (photo is File) {
-              request.files.add(
-                await http.MultipartFile.fromPath(
-                  'items[$i][photos][$j]',
-                  photo.path,
-                ),
-              );
-            }
-          }
+        if (item['outlet_remarks'] != null) {
+          request.fields['items[$i][outlet_remarks]'] = item['outlet_remarks'];
+        }
+      }
+      
+      // Add photos if provided
+      if (photos != null && photos.isNotEmpty) {
+        for (int i = 0; i < photos.length; i++) {
+          request.files.add(
+            await http.MultipartFile.fromPath(
+              'photos[$i]',
+              photos[i].path,
+            ),
+          );
         }
       }
 
