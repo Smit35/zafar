@@ -406,6 +406,11 @@ class _OutletOrdersTabState extends State<OutletOrdersTab> {
     final statusColor = _getStatusColor(order.status);
     final statusName = _getStatusDisplayName(order.status);
     
+    // Determine button eligibility
+    final bool showInwardButton = order.shouldShowInwardButton && order.isOtpVerified;
+    final bool showInvoiceButton = order.paymentStatus.toLowerCase() == 'paid';
+    final bool showButtons = showInwardButton || showInvoiceButton;
+    
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -416,24 +421,26 @@ class _OutletOrdersTabState extends State<OutletOrdersTab> {
           width: 1.5,
         ),
       ),
-      child: Row(
-        children: [
-          // Left Status Color Line
-          Container(
-            width: 4,
-            height: 140,
-            decoration: BoxDecoration(
-              color: statusColor,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(12),
-                bottomLeft: Radius.circular(12),
+      child: IntrinsicHeight(
+        child: Row(
+          children: [
+            // Left Status Color Line with proper spacing
+            Container(
+              width: 3,
+              margin: const EdgeInsets.symmetric(vertical: 8),
+              decoration: BoxDecoration(
+                color: statusColor,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(12),
+                  bottomLeft: Radius.circular(12),
+                ),
+                // borderRadius: BorderRadius.circular(2),
               ),
             ),
-          ),
           
-          // Main Content
-          Expanded(
-            child: Padding(
+            // Main Content
+            Expanded(
+              child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -564,95 +571,187 @@ class _OutletOrdersTabState extends State<OutletOrdersTab> {
                   ),
                   
                   const SizedBox(height: 16),
-                  
-                  // Separator Line
-                  Container(
-                    height: 1,
-                    color: const Color(0xFFE5E7EB),
-                  ),
-                  
-                  const SizedBox(height: 12),
-                  
-                  // Action Buttons Row
-                  Row(
-                    children: [
-                      // Inward Button (conditional)
-                      if (order.shouldShowInwardButton) ...[
-                        Expanded(
-                          child: SizedBox(
-                            height: 40,
-                            child: ElevatedButton.icon(
-                              onPressed: () => _showInwardDialog(order),
-                              icon: const Icon(Icons.input_rounded, size: 16),
-                              label: const Text(
-                                'Inward',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF10B981),
-                                foregroundColor: Colors.white,
-                                elevation: 0,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                padding: const EdgeInsets.symmetric(horizontal: 12),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                      ],
-                      
-                      // Invoice Button
-                      Expanded(
-                        child: SizedBox(
-                          height: 40,
-                          child: OutlinedButton.icon(
-                            onPressed: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) => InvoiceScreen(orderId: order.id.toString()),
-                                ),
-                              );
-                            },
-                            icon: const Icon(
-                              Icons.receipt_long_outlined, 
-                              size: 16,
-                              color: Color(0xFF4F46E5),
-                            ),
-                            label: const Text(
-                              'View Invoice',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFF4F46E5),
-                              ),
-                            ),
-                            style: OutlinedButton.styleFrom(
-                              side: const BorderSide(
-                                color: Color(0xFF4F46E5),
-                                width: 1.5,
-                              ),
-                              backgroundColor: Colors.transparent,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              padding: const EdgeInsets.symmetric(horizontal: 12),
-                            ),
-                          ),
+
+                  // Delivery OTP (if available)
+                  if (order.hasOtp && order.deliveryOtp != null) ...[
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: order.isOtpExpired
+                            ? Colors.red[50]
+                            : order.isOtpVerified
+                            ? Colors.green[50]
+                            : Colors.orange[50],
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: order.isOtpExpired
+                              ? Colors.red[200]!
+                              : order.isOtpVerified
+                              ? Colors.green[200]!
+                              : Colors.orange[200]!,
                         ),
                       ),
-                    ],
-                  ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            order.isOtpExpired
+                                ? Icons.access_time
+                                : order.isOtpVerified
+                                ? Icons.check_circle
+                                : Icons.security,
+                            color: order.isOtpExpired
+                                ? Colors.red[700]
+                                : order.isOtpVerified
+                                ? Colors.green[700]
+                                : Colors.orange[700],
+                            size: 18,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Delivery OTP: ',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: order.isOtpExpired
+                                  ? Colors.red[700]
+                                  : order.isOtpVerified
+                                  ? Colors.green[700]
+                                  : Colors.orange[700],
+                            ),
+                          ),
+                          Text(
+                            order.deliveryOtp!,
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: order.isOtpExpired
+                                  ? Colors.red[700]
+                                  : order.isOtpVerified
+                                  ? Colors.green[700]
+                                  : Colors.orange[700],
+                              letterSpacing: 2,
+                            ),
+                          ),
+                          if (order.isOtpExpired) ...[
+                            const Spacer(),
+                            Text(
+                              'EXPIRED',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.red[700],
+                              ),
+                            ),
+                          ] else if (order.isOtpVerified) ...[
+                            const Spacer(),
+                            Text(
+                              'VERIFIED',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green[700],
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  const SizedBox(height: 12),
+                  ],
+                  
+                  // Separator Line (only show if buttons are available)
+                  if (showButtons) ...[
+                    Container(
+                      height: 1,
+                      color: const Color(0xFFE5E7EB),
+                    ),
+                    
+                    const SizedBox(height: 12),
+                    
+                    // Action Buttons Row
+                    Row(
+                      children: [
+                        // Inward Button (only if OTP is verified)
+                        if (showInwardButton) ...[
+                          Expanded(
+                            child: SizedBox(
+                              height: 40,
+                              child: ElevatedButton.icon(
+                                onPressed: () => _showInwardDialog(order),
+                                icon: const Icon(Icons.input_rounded, size: 16),
+                                label: const Text(
+                                  'Inward',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF10B981),
+                                  foregroundColor: Colors.white,
+                                  elevation: 0,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                                ),
+                              ),
+                            ),
+                          ),
+                          if (showInvoiceButton) const SizedBox(width: 8),
+                        ],
+                        
+                        // Invoice Button (only if payment is paid)
+                        if (showInvoiceButton)
+                          Expanded(
+                            child: SizedBox(
+                              height: 40,
+                              child: OutlinedButton.icon(
+                                onPressed: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (context) => InvoiceScreen(orderId: order.id.toString()),
+                                    ),
+                                  );
+                                },
+                                icon: const Icon(
+                                  Icons.receipt_long_outlined, 
+                                  size: 16,
+                                  color: Color(0xFF4F46E5),
+                                ),
+                                label: const Text(
+                                  'View Invoice',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF4F46E5),
+                                  ),
+                                ),
+                                style: OutlinedButton.styleFrom(
+                                  side: const BorderSide(
+                                    color: Color(0xFF4F46E5),
+                                    width: 1.5,
+                                  ),
+                                  backgroundColor: Colors.transparent,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
                 ],
               ),
             ),
           ),
         ],
+        ),
       ),
     );
   }
