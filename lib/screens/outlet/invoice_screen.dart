@@ -484,7 +484,7 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
     if (_isLoading) {
       return Scaffold(
         appBar: AppBar(
-          backgroundColor: Colors.orange[600],
+          backgroundColor: Colors.blueGrey[600],
           foregroundColor: Colors.white,
           title: const Text('Invoice'),
           elevation: 0,
@@ -496,7 +496,7 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
     if (_order == null) {
       return Scaffold(
         appBar: AppBar(
-          backgroundColor: Colors.orange[600],
+          backgroundColor: Colors.blueGrey[600],
           foregroundColor: Colors.white,
           title: const Text('Invoice'),
           elevation: 0,
@@ -513,7 +513,7 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        backgroundColor: Colors.orange[600],
+        backgroundColor: Colors.blueGrey[600],
         foregroundColor: Colors.white,
         title: const Text('Invoice'),
         elevation: 0,
@@ -649,7 +649,7 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                         const Text(
                           'Outlet Details:',
                           style: TextStyle(
-                            fontSize: 16,
+                            fontSize: 14,
                             fontWeight: FontWeight.bold,
                           ),
                         ),

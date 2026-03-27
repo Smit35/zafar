@@ -274,79 +274,82 @@ class _OutletWalletScreenState extends State<OutletWalletScreen> {
   Widget _buildFilters() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
-      child: Column(
+      child: Row(
         children: [
-          // Single Select Date like order screen
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.grey[300]!),
-            ),
-            child: GestureDetector(
-              onTap: () => _showDateRangePicker(),
-              child: Row(
-                children: [
-                  Icon(Icons.calendar_today, size: 16, color: Colors.grey[600]),
-                  const SizedBox(width: 8),
-                  Text(
-                    _getDateRangeText(),
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 14,
-                    ),
-                  ),
-                  const Spacer(),
-                  Icon(Icons.keyboard_arrow_down, size: 16, color: Colors.grey[600]),
-                ],
+          // Date picker like order screen
+          Expanded(
+            child: ElevatedButton.icon(
+              onPressed: _selectDateRange,
+              icon: const Icon(Icons.calendar_month_rounded, size: 16),
+              label: Text(
+                _fromDate != null && _toDate != null
+                    ? '${DateFormat('MMM dd').format(_fromDate!)} - ${DateFormat('MMM dd').format(_toDate!)}'
+                    : 'Select Date',
+                style: const TextStyle(fontSize: 13),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF4F46E5),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(width: 12),
           // Transaction Type - smaller dropdown
-          Row(
-            children: [
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.grey[300]!),
-                  ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      value: _selectedType,
-                      isExpanded: true,
-                      items: ['All', 'Credit', 'Debit']
-                          .map((status) => DropdownMenuItem(
-                                value: status == 'All' ? null : status.toLowerCase(),
-                                child: Text(status, style: const TextStyle(fontSize: 14)),
-                              ))
-                          .toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          _selectedType = value;
-                        });
-                        _loadTransactions();
-                      },
-                    ),
-                  ),
+          Expanded(
+            child: Container(
+              height: 44,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey[300]!),
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  value: _selectedType,
+                  isExpanded: true,
+                  items: ['All', 'Credit', 'Debit']
+                      .map((status) => DropdownMenuItem(
+                            value: status == 'All' ? null : status.toLowerCase(),
+                            child: Text(status, style: const TextStyle(fontSize: 14)),
+                          ))
+                      .toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedType = value;
+                    });
+                    _loadTransactions();
+                  },
                 ),
               ),
-            ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  String _getDateRangeText() {
-    if (_fromDate != null && _toDate != null) {
-      return '${_fromDate!.day}/${_fromDate!.month}/${_fromDate!.year} - ${_toDate!.day}/${_toDate!.month}/${_toDate!.year}';
+  Future<void> _selectDateRange() async {
+    final DateTimeRange? picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+      initialDateRange: _fromDate != null && _toDate != null
+          ? DateTimeRange(start: _fromDate!, end: _toDate!)
+          : null,
+    );
+    
+    if (picked != null) {
+      setState(() {
+        _fromDate = picked.start;
+        _toDate = picked.end;
+      });
+      _loadTransactions();
     }
-    return 'Select Date Range';
   }
 
   Future<void> _showDateRangePicker() async {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../../models/return.dart';
 import '../../services/api_service.dart';
 import 'eligible_orders_screen.dart';
@@ -143,8 +144,8 @@ class _OutletReturnScreenState extends State<OutletReturnScreen> {
       ),
       child: Column(
         children: [
-          Icon(icon, color: color, size: 20),
-          const SizedBox(height: 8),
+          // Icon(icon, color: color, size: 20),
+          // const SizedBox(height: 8),
           Text(
             count,
             style: TextStyle(
@@ -209,9 +210,33 @@ class _OutletReturnScreenState extends State<OutletReturnScreen> {
           const SizedBox(height: 12),
           Row(
             children: [
+              // Date picker like order screen
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: _selectDateRange,
+                  icon: const Icon(Icons.calendar_month_rounded, size: 16),
+                  label: Text(
+                    _fromDate != null && _toDate != null
+                        ? '${DateFormat('MMM dd').format(_fromDate!)} - ${DateFormat('MMM dd').format(_toDate!)}'
+                        : 'Select Date',
+                    style: const TextStyle(fontSize: 13),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF4F46E5),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              // Status dropdown - smaller height
               Expanded(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  height: 44,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(8),
@@ -233,68 +258,6 @@ class _OutletReturnScreenState extends State<OutletReturnScreen> {
                         });
                         _filterReturns();
                       },
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: GestureDetector(
-                  onTap: () => _selectDate(true),
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.grey[300]!),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.calendar_today, size: 16, color: Colors.grey[600]),
-                        const SizedBox(width: 8),
-                        Text(
-                          _fromDate != null
-                              ? '${_fromDate!.day}/${_fromDate!.month}/${_fromDate!.year}'
-                              : 'From Date',
-                          style: TextStyle(
-                            color: _fromDate != null ? Colors.black : Colors.grey[500],
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: GestureDetector(
-                  onTap: () => _selectDate(false),
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.grey[300]!),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.calendar_today, size: 16, color: Colors.grey[600]),
-                        const SizedBox(width: 8),
-                        Text(
-                          _toDate != null
-                              ? '${_toDate!.day}/${_toDate!.month}/${_toDate!.year}'
-                              : 'To Date',
-                          style: TextStyle(
-                            color: _toDate != null ? Colors.black : Colors.grey[500],
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
                     ),
                   ),
                 ),
@@ -529,6 +492,25 @@ class _OutletReturnScreenState extends State<OutletReturnScreen> {
 
   void _filterReturns() {
     _loadReturns();
+  }
+
+  Future<void> _selectDateRange() async {
+    final DateTimeRange? picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+      initialDateRange: _fromDate != null && _toDate != null
+          ? DateTimeRange(start: _fromDate!, end: _toDate!)
+          : null,
+    );
+    
+    if (picked != null) {
+      setState(() {
+        _fromDate = picked.start;
+        _toDate = picked.end;
+      });
+      _filterReturns();
+    }
   }
 
   Future<void> _selectDate(bool isFromDate) async {
