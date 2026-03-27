@@ -573,7 +573,7 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                   Text(
                     'ZAFAR',
                     style: TextStyle(
-                      fontSize: 32,
+                      fontSize: 20,
                       fontWeight: FontWeight.bold,
                       color: Colors.orange[600],
                     ),
@@ -584,15 +584,24 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                       const Text(
                         'INVOICE',
                         style: TextStyle(
-                          fontSize: 28,
+                          fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
+                      const SizedBox(height: 4),
                       Text(
-                        'Invoice Copy - ${_order!.orderNumber}',
+                        'Order No.',
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: 10,
                           color: Colors.grey[600],
+                        ),
+                      ),
+                      Text(
+                        '${_order!.orderNumber}',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
                         ),
                       ),
                     ],
@@ -611,9 +620,9 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Order No: ${_order!.orderNumber}',
+                          'Order Details',
                           style: const TextStyle(
-                            fontSize: 16,
+                            fontSize: 14,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -679,7 +688,7 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                   children: [
                     // Table Header
                     Container(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: Colors.grey[100],
                         borderRadius: const BorderRadius.only(
@@ -689,13 +698,13 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                       ),
                       child: Row(
                         children: [
-                          const Expanded(flex: 3, child: Text('Product', style: TextStyle(fontWeight: FontWeight.bold))),
-                          const Expanded(flex: 1, child: Text('UOM', style: TextStyle(fontWeight: FontWeight.bold))),
-                          const Expanded(flex: 1, child: Text('Qty', style: TextStyle(fontWeight: FontWeight.bold))),
-                          const Expanded(flex: 1, child: Text('Price', style: TextStyle(fontWeight: FontWeight.bold))),
-                          const Expanded(flex: 1, child: Text('CGST', style: TextStyle(fontWeight: FontWeight.bold))),
-                          const Expanded(flex: 1, child: Text('SGST', style: TextStyle(fontWeight: FontWeight.bold))),
-                          const Expanded(flex: 1, child: Text('Total', style: TextStyle(fontWeight: FontWeight.bold))),
+                          const Expanded(flex: 3, child: Text('Product', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10))),
+                          const Expanded(flex: 1, child: Text('UOM', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10))),
+                          const Expanded(flex: 1, child: Text('Qty', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10), textAlign: TextAlign.center)),
+                          const Expanded(flex: 2, child: Text('Price', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10), textAlign: TextAlign.right)),
+                          const Expanded(flex: 2, child: Text('CGST', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10), textAlign: TextAlign.right)),
+                          const Expanded(flex: 2, child: Text('SGST', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10), textAlign: TextAlign.right)),
+                          const Expanded(flex: 2, child: Text('Total', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10), textAlign: TextAlign.right)),
                         ],
                       ),
                     ),
@@ -707,7 +716,7 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                       final isLast = index == _order!.items.length - 1;
                       
                       return Container(
-                        padding: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
                           border: Border(
                             bottom: isLast ? BorderSide.none : BorderSide(color: Colors.grey[300]!),
@@ -715,13 +724,64 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                         ),
                         child: Row(
                           children: [
-                            Expanded(flex: 3, child: Text(item.productName)),
-                            Expanded(flex: 1, child: Text(item.uom)),
-                            Expanded(flex: 1, child: Text(item.qtyOrdered.toStringAsFixed(3))),
-                            Expanded(flex: 1, child: Text('₹${item.unitPrice.toStringAsFixed(2)}')),
-                            Expanded(flex: 1, child: Text('₹${item.cgstAmount.toStringAsFixed(2)}')),
-                            Expanded(flex: 1, child: Text('₹${item.sgstAmount.toStringAsFixed(2)}')),
-                            Expanded(flex: 1, child: Text('₹${item.lineTotal.toStringAsFixed(2)}')),
+                            Expanded(
+                              flex: 3, 
+                              child: Text(
+                                item.productName,
+                                style: const TextStyle(fontSize: 9),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            Expanded(
+                              flex: 1, 
+                              child: Text(
+                                item.uom,
+                                style: const TextStyle(fontSize: 9),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            Expanded(
+                              flex: 1, 
+                              child: Text(
+                                item.qtyOrdered.toStringAsFixed(0),
+                                style: const TextStyle(fontSize: 9),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                            Expanded(
+                              flex: 2, 
+                              child: Text(
+                                '₹${item.unitPrice.toStringAsFixed(0)}',
+                                style: const TextStyle(fontSize: 9),
+                                textAlign: TextAlign.right,
+                              ),
+                            ),
+                            Expanded(
+                              flex: 2, 
+                              child: Text(
+                                '₹${item.cgstAmount.toStringAsFixed(0)}',
+                                style: const TextStyle(fontSize: 9),
+                                textAlign: TextAlign.right,
+                              ),
+                            ),
+                            Expanded(
+                              flex: 2, 
+                              child: Text(
+                                '₹${item.sgstAmount.toStringAsFixed(0)}',
+                                style: const TextStyle(fontSize: 9),
+                                textAlign: TextAlign.right,
+                              ),
+                            ),
+                            Expanded(
+                              flex: 2, 
+                              child: Text(
+                                '₹${item.lineTotal.toStringAsFixed(0)}',
+                                style: const TextStyle(fontSize: 9),
+                                textAlign: TextAlign.right,
+                              ),
+                            ),
                           ],
                         ),
                       );
@@ -733,45 +793,84 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
               const SizedBox(height: 20),
               
               // Summary
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        'Subtotal: ₹${_order!.subtotal.toStringAsFixed(2)}',
-                        style: const TextStyle(fontSize: 14),
-                      ),
-                      const SizedBox(height: 5),
-                      Text(
-                        'CGST: ₹${_order!.cgstAmount.toStringAsFixed(2)}',
-                        style: const TextStyle(fontSize: 14),
-                      ),
-                      const SizedBox(height: 5),
-                      Text(
-                        'SGST: ₹${_order!.sgstAmount.toStringAsFixed(2)}',
-                        style: const TextStyle(fontSize: 14),
-                      ),
-                      const SizedBox(height: 10),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.orange[50],
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.orange[200]!),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.grey[50],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey[300]!),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Subtotal:',
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
                         ),
-                        child: Text(
-                          'Grand Total: ₹${_order!.grandTotal.toStringAsFixed(2)}',
-                          style: const TextStyle(
-                            fontSize: 18,
+                        Text(
+                          '₹${_order!.subtotal.toStringAsFixed(0)}',
+                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'CGST:',
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                        ),
+                        Text(
+                          '₹${_order!.cgstAmount.toStringAsFixed(0)}',
+                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'SGST:',
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                        ),
+                        Text(
+                          '₹${_order!.sgstAmount.toStringAsFixed(0)}',
+                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    const Divider(thickness: 1),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Grand Total:',
+                          style: TextStyle(
+                            fontSize: 16,
                             fontWeight: FontWeight.bold,
+                            color: Colors.orange[700],
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                ],
+                        Text(
+                          '₹${_order!.grandTotal.toStringAsFixed(0)}',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.orange[700],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
               
               const SizedBox(height: 30),

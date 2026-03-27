@@ -86,24 +86,24 @@ class _OutletMainScreenState extends State<OutletMainScreen> {
         ),
         centerTitle: false,
         actions: [
-          IconButton(
-            icon: Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(
-                Icons.notifications_outlined,
-                color: Colors.black54,
-                size: 20,
-              ),
-            ),
-            onPressed: () {
-              // Navigate to notifications
-            },
-          ),
-          const SizedBox(width: 8),
+          // IconButton(
+          //   icon: Container(
+          //     padding: const EdgeInsets.all(6),
+          //     decoration: BoxDecoration(
+          //       color: Colors.grey[100],
+          //       borderRadius: BorderRadius.circular(8),
+          //     ),
+          //     child: const Icon(
+          //       Icons.notifications_outlined,
+          //       color: Colors.black54,
+          //       size: 20,
+          //     ),
+          //   ),
+          //   onPressed: () {
+          //     // Navigate to notifications
+          //   },
+          // ),
+          // const SizedBox(width: 8),
           GestureDetector(
             onTap: () {
               Navigator.push(

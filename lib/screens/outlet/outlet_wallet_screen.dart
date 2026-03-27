@@ -109,33 +109,101 @@ class _OutletWalletScreenState extends State<OutletWalletScreen> {
   Widget _buildWalletStatsCards() {
     return Container(
       margin: const EdgeInsets.all(16),
-      child: Row(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[300]!, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withValues(alpha: 0.1),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
         children: [
-          Expanded(
-            child: _buildStatCard(
-              'Wallet Balance',
-              '₹${_walletBalance.toStringAsFixed(2)}',
-              Icons.account_balance_wallet,
-              Colors.blueGrey[600]!,
-            ),
+          // Wallet Balance
+          Column(
+            children: [
+              Text(
+                'Wallet Balance',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey[600],
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '₹${_walletBalance.toStringAsFixed(0)}',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blueGrey[600],
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: _buildStatCard(
-              'Total Credited',
-              '₹${_totalCredited.toStringAsFixed(2)}',
-              Icons.trending_up,
-              Colors.green[600]!,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: _buildStatCard(
-              'Total Debited',
-              '₹${_totalDebited.toStringAsFixed(2)}',
-              Icons.trending_down,
-              Colors.red[600]!,
-            ),
+          const SizedBox(height: 16),
+          const Divider(height: 1),
+          const SizedBox(height: 16),
+          // Credit and Debit in row
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  children: [
+                    Text(
+                      'Total Credited',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '₹${_totalCredited.toStringAsFixed(0)}',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green[600],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                width: 1,
+                height: 40,
+                color: Colors.grey[300],
+              ),
+              Expanded(
+                child: Column(
+                  children: [
+                    Text(
+                      'Total Debited',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '₹${_totalDebited.toStringAsFixed(0)}',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.red[600],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -206,166 +274,66 @@ class _OutletWalletScreenState extends State<OutletWalletScreen> {
   Widget _buildFilters() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.1),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Filters',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
+          // Single Select Date like order screen
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.grey[300]!),
             ),
-          ),
-          const SizedBox(height: 16),
-          Column(
-            children: [
-              // Date Row
-              Row(
+            child: GestureDetector(
+              onTap: () => _showDateRangePicker(),
+              child: Row(
                 children: [
-                  // From Date
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'From Date',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.grey[700],
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        GestureDetector(
-                          onTap: () => _selectFromDate(),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.grey[300]!),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(Icons.date_range, size: 20, color: Colors.grey[600]),
-                                const SizedBox(width: 8),
-                                Text(
-                                  _fromDate != null 
-                                      ? DateFormat('dd/MM/yyyy').format(_fromDate!)
-                                      : 'Select Date',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: _fromDate != null ? Colors.black87 : Colors.grey[600],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
+                  Icon(Icons.calendar_today, size: 16, color: Colors.grey[600]),
+                  const SizedBox(width: 8),
+                  Text(
+                    _getDateRangeText(),
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 14,
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  // To Date
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'To Date',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.grey[700],
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        GestureDetector(
-                          onTap: () => _selectToDate(),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.grey[300]!),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(Icons.date_range, size: 20, color: Colors.grey[600]),
-                                const SizedBox(width: 8),
-                                Text(
-                                  _toDate != null 
-                                      ? DateFormat('dd/MM/yyyy').format(_toDate!)
-                                      : 'Select Date',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: _toDate != null ? Colors.black87 : Colors.grey[600],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  const Spacer(),
+                  Icon(Icons.keyboard_arrow_down, size: 16, color: Colors.grey[600]),
                 ],
               ),
-              const SizedBox(height: 16),
-              // Type Dropdown Row
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Transaction Type',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.grey[700],
+            ),
+          ),
+          const SizedBox(height: 12),
+          // Transaction Type - smaller dropdown
+          Row(
+            children: [
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.grey[300]!),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: _selectedType,
+                      isExpanded: true,
+                      items: ['All', 'Credit', 'Debit']
+                          .map((status) => DropdownMenuItem(
+                                value: status == 'All' ? null : status.toLowerCase(),
+                                child: Text(status, style: const TextStyle(fontSize: 14)),
+                              ))
+                          .toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedType = value;
+                        });
+                        _loadTransactions();
+                      },
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey[300]!),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: _selectedType,
-                        hint: Text(
-                          'Select Type',
-                          style: TextStyle(color: Colors.grey[600], fontSize: 14),
-                        ),
-                        isExpanded: true,
-                        items: [
-                          const DropdownMenuItem(value: null, child: Text('All Transactions')),
-                          const DropdownMenuItem(value: 'credit', child: Text('Credit Only')),
-                          const DropdownMenuItem(value: 'debit', child: Text('Debit Only')),
-                        ],
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedType = value;
-                          });
-                          _loadTransactions();
-                        },
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ],
           ),
@@ -374,34 +342,145 @@ class _OutletWalletScreenState extends State<OutletWalletScreen> {
     );
   }
 
-  Future<void> _selectFromDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _fromDate ?? DateTime.now(),
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now(),
-    );
-    if (picked != null) {
-      setState(() {
-        _fromDate = picked;
-      });
-      _loadTransactions();
+  String _getDateRangeText() {
+    if (_fromDate != null && _toDate != null) {
+      return '${_fromDate!.day}/${_fromDate!.month}/${_fromDate!.year} - ${_toDate!.day}/${_toDate!.month}/${_toDate!.year}';
     }
+    return 'Select Date Range';
   }
 
-  Future<void> _selectToDate() async {
-    final picked = await showDatePicker(
+  Future<void> _showDateRangePicker() async {
+    showModalBottomSheet(
       context: context,
-      initialDate: _toDate ?? DateTime.now(),
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now(),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Select Date Range',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: _fromDate ?? DateTime.now(),
+                        firstDate: DateTime(2020),
+                        lastDate: DateTime.now(),
+                      );
+                      if (picked != null) {
+                        setState(() {
+                          _fromDate = picked;
+                        });
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.grey[300]!),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.calendar_today, size: 16, color: Colors.grey[600]),
+                          const SizedBox(width: 8),
+                          Text(
+                            _fromDate != null
+                                ? '${_fromDate!.day}/${_fromDate!.month}/${_fromDate!.year}'
+                                : 'From Date',
+                            style: TextStyle(
+                              color: _fromDate != null ? Colors.black : Colors.grey[500],
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: _toDate ?? DateTime.now(),
+                        firstDate: DateTime(2020),
+                        lastDate: DateTime.now(),
+                      );
+                      if (picked != null) {
+                        setState(() {
+                          _toDate = picked;
+                        });
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.grey[300]!),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.calendar_today, size: 16, color: Colors.grey[600]),
+                          const SizedBox(width: 8),
+                          Text(
+                            _toDate != null
+                                ? '${_toDate!.day}/${_toDate!.month}/${_toDate!.year}'
+                                : 'To Date',
+                            style: TextStyle(
+                              color: _toDate != null ? Colors.black : Colors.grey[500],
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Expanded(
+                  child: TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Cancel'),
+                  ),
+                ),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _loadTransactions();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blueGrey[600],
+                      foregroundColor: Colors.white,
+                    ),
+                    child: const Text('Apply'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
-    if (picked != null) {
-      setState(() {
-        _toDate = picked;
-      });
-      _loadTransactions();
-    }
   }
 
   Widget _buildTransactionTable() {
