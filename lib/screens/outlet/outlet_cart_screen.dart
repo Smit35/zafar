@@ -39,10 +39,24 @@ class _OutletCartScreenState extends State<OutletCartScreen> {
           _isLoading = false;
         });
       } else {
-        setState(() {
-          _errorMessage = result['message'];
-          _isLoading = false;
-        });
+        // Check if this is likely an empty cart scenario
+        final message = result['message'] ?? '';
+        if (message.toLowerCase().contains('cart') || 
+            message.toLowerCase().contains('empty') ||
+            message.toLowerCase().contains('no items') ||
+            message.toLowerCase().contains('preview')) {
+          // Treat as empty cart instead of error
+          setState(() {
+            _orderPreview = null;
+            _items = [];
+            _isLoading = false;
+          });
+        } else {
+          setState(() {
+            _errorMessage = result['message'];
+            _isLoading = false;
+          });
+        }
       }
     } catch (e) {
       setState(() {

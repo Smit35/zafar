@@ -967,7 +967,7 @@ class ApiService {
   // Get outlet inventory
   Future<Map<String, dynamic>> getOutletInventory({
     int page = 1,
-    int perPage = 20,
+    int perPage = 50,
   }) async {
     try {
       final response = await http.get(
@@ -977,12 +977,29 @@ class ApiService {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
+        final itemsData = data['data'];
+        List<InventoryItem> items = [];
+        
+        if (itemsData != null && itemsData is List) {
+          items = itemsData
+              .where((item) => item != null)
+              .map((json) {
+                try {
+                  return InventoryItem.fromJson(json as Map<String, dynamic>);
+                } catch (e) {
+                  print('Error parsing inventory item: $e, JSON: $json');
+                  return null;
+                }
+              })
+              .where((item) => item != null)
+              .cast<InventoryItem>()
+              .toList();
+        }
+        
         return {
           'success': true,
-          'items': (data['data']['data'] as List)
-              .map((json) => InventoryItem.fromJson(json))
-              .toList(),
-          'meta': data['data'],
+          'items': items,
+          'meta': data['meta'] ?? {},
         };
       } else if (response.statusCode == 401) {
         return {'success': false, 'message': 'Session expired'};
