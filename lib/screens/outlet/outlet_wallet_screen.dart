@@ -89,19 +89,19 @@ class _OutletWalletScreenState extends State<OutletWalletScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      body: Column(
-        children: [
-          // Wallet Stats Cards
-          _buildWalletStatsCards(),
-          
-          // Filters
-          _buildFilters(),
-          
-          // Transaction Table
-          Expanded(
-            child: _buildTransactionTable(),
-          ),
-        ],
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            // Wallet Stats Cards
+            _buildWalletStatsCards(),
+            
+            // Filters
+            _buildFilters(),
+            
+            // Transaction Table
+            _buildTransactionTable(),
+          ],
+        ),
       ),
     );
   }
@@ -453,48 +453,52 @@ class _OutletWalletScreenState extends State<OutletWalletScreen> {
               ),
             )
           else
-            Expanded(
+            Container(
+              constraints: const BoxConstraints(minHeight: 300, maxHeight: 500),
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: SingleChildScrollView(
                   child: DataTable(
                     columnSpacing: 20,
                     headingRowColor: WidgetStateProperty.all(Colors.grey[50]),
+                    headingRowHeight: 40,
+                    dataRowMinHeight: 40,
+                    dataRowMaxHeight: 50,
                     columns: const [
                       DataColumn(
                         label: Text(
                           'Date',
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
                         ),
                       ),
                       DataColumn(
                         label: Text(
                           'Type',
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
                         ),
                       ),
                       DataColumn(
                         label: Text(
                           'Source',
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
                         ),
                       ),
                       DataColumn(
                         label: Text(
                           'Amount',
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
                         ),
                       ),
                       DataColumn(
                         label: Text(
                           'Balance',
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
                         ),
                       ),
                       DataColumn(
                         label: Text(
                           'Remarks',
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
                         ),
                       ),
                     ],
@@ -525,9 +529,13 @@ class _OutletWalletScreenState extends State<OutletWalletScreen> {
                             ),
                           ),
                           DataCell(
-                            Text(
-                              transaction.source.replaceAll('_', ' ').toUpperCase(),
-                              style: const TextStyle(fontSize: 12),
+                            Container(
+                              constraints: const BoxConstraints(maxWidth: 100),
+                              child: Text(
+                                transaction.source.replaceAll('_', ' ').toUpperCase(),
+                                style: const TextStyle(fontSize: 12),
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
                           ),
                           DataCell(
@@ -547,9 +555,13 @@ class _OutletWalletScreenState extends State<OutletWalletScreen> {
                             ),
                           ),
                           DataCell(
-                            Text(
-                              transaction.remarks ?? '-',
-                              style: const TextStyle(fontSize: 12),
+                            Container(
+                              constraints: const BoxConstraints(maxWidth: 100),
+                              child: Text(
+                                transaction.remarks ?? '-',
+                                style: const TextStyle(fontSize: 12),
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
                           ),
                         ],

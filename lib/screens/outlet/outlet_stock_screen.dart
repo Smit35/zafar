@@ -40,14 +40,14 @@ class _OutletReturnScreenState extends State<OutletReturnScreen> {
       backgroundColor: Colors.grey[50],
       body: RefreshIndicator(
         onRefresh: _refreshReturns,
-        child: Column(
-          children: [
-            _buildStatsCard(),
-            _buildFilterSection(),
-            Expanded(
-              child: _buildReturnsTable(),
-            ),
-          ],
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              _buildStatsCard(),
+              _buildFilterSection(),
+              _buildReturnsTable(),
+            ],
+          ),
         ),
       ),
     );
@@ -322,29 +322,38 @@ class _OutletReturnScreenState extends State<OutletReturnScreen> {
 
   Widget _buildReturnsTable() {
     if (_isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(),
+      return Container(
+        height: 200,
+        margin: const EdgeInsets.all(16),
+        child: const Center(
+          child: CircularProgressIndicator(),
+        ),
       );
     }
 
     if (_returns.isEmpty) {
-      return const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.assignment_return, size: 64, color: Colors.grey),
-            SizedBox(height: 16),
-            Text(
-              'No returns found',
-              style: TextStyle(fontSize: 16, color: Colors.grey),
-            ),
-          ],
+      return Container(
+        height: 200,
+        margin: const EdgeInsets.all(16),
+        child: const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.assignment_return, size: 64, color: Colors.grey),
+              SizedBox(height: 16),
+              Text(
+                'No returns found',
+                style: TextStyle(fontSize: 16, color: Colors.grey),
+              ),
+            ],
+          ),
         ),
       );
     }
 
     return Container(
       margin: const EdgeInsets.all(16),
+      constraints: const BoxConstraints(minHeight: 300, maxHeight: 500),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -357,6 +366,7 @@ class _OutletReturnScreenState extends State<OutletReturnScreen> {
         ],
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Container(
             padding: const EdgeInsets.all(16),
@@ -380,28 +390,41 @@ class _OutletReturnScreenState extends State<OutletReturnScreen> {
               ],
             ),
           ),
-          Expanded(
+          Flexible(
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: SingleChildScrollView(
                 child: DataTable(
+                  columnSpacing: 16,
+                  headingRowHeight: 40,
+                  dataRowMinHeight: 40,
+                  dataRowMaxHeight: 50,
                   columns: const [
-                    DataColumn(label: Text('Return ID', style: TextStyle(fontWeight: FontWeight.bold))),
-                    DataColumn(label: Text('Order No.', style: TextStyle(fontWeight: FontWeight.bold))),
-                    DataColumn(label: Text('Product', style: TextStyle(fontWeight: FontWeight.bold))),
-                    DataColumn(label: Text('Qty', style: TextStyle(fontWeight: FontWeight.bold))),
-                    DataColumn(label: Text('Status', style: TextStyle(fontWeight: FontWeight.bold))),
-                    DataColumn(label: Text('Date', style: TextStyle(fontWeight: FontWeight.bold))),
+                    DataColumn(label: Text('Return ID', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
+                    DataColumn(label: Text('Order No.', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
+                    DataColumn(label: Text('Product', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
+                    DataColumn(label: Text('Qty', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
+                    DataColumn(label: Text('Status', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
+                    DataColumn(label: Text('Date', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
                   ],
                   rows: _returns.map((returnItem) {
                     return DataRow(
                       cells: [
-                        DataCell(Text('#${returnItem.id}')),
-                        DataCell(Text(returnItem.order?.orderNumber ?? 'N/A')),
-                        DataCell(Text(returnItem.orderItem?.productName ?? 'N/A')),
-                        DataCell(Text('${returnItem.returnedQty} ${returnItem.orderItem?.uom ?? ''}')),
+                        DataCell(Text('#${returnItem.id}', style: const TextStyle(fontSize: 12))),
+                        DataCell(Text(returnItem.order?.orderNumber ?? 'N/A', style: const TextStyle(fontSize: 12))),
+                        DataCell(
+                          Container(
+                            constraints: const BoxConstraints(maxWidth: 120),
+                            child: Text(
+                              returnItem.orderItem?.productName ?? 'N/A',
+                              style: const TextStyle(fontSize: 12),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ),
+                        DataCell(Text('${returnItem.returnedQty} ${returnItem.orderItem?.uom ?? ''}', style: const TextStyle(fontSize: 12))),
                         DataCell(_buildStatusChip(returnItem.status)),
-                        DataCell(Text('${returnItem.createdAt.day}/${returnItem.createdAt.month}/${returnItem.createdAt.year}')),
+                        DataCell(Text('${returnItem.createdAt.day}/${returnItem.createdAt.month}/${returnItem.createdAt.year}', style: const TextStyle(fontSize: 12))),
                       ],
                     );
                   }).toList(),

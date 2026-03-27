@@ -485,16 +485,19 @@ class _OutletCatalogScreenState extends State<OutletCatalogScreen> {
                           item.name,
                           style: const TextStyle(
                             fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF1A1A1A),
+                            height: 1.2,
                           ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 6),
                         Text(
                           'SKU: ${item.sku}',
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 12,
-                            color: Colors.grey[600],
+                            color: Color(0xFF6B7280),
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -511,19 +514,27 @@ class _OutletCatalogScreenState extends State<OutletCatalogScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Text(
-                    '₹${item.priceValue.toStringAsFixed(2)}',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  Text(
-                    '/${item.uom}',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[600],
+                  RichText(
+                    text: TextSpan(
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF059669),
+                        height: 1.2,
+                      ),
+                      children: [
+                        TextSpan(
+                          text: '₹${item.priceValue.toStringAsFixed(2)}',
+                        ),
+                        TextSpan(
+                          text: ' /${item.uom}',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF6B7280),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 4),
