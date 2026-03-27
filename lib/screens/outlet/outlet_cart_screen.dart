@@ -150,7 +150,7 @@ class _OutletCartScreenState extends State<OutletCartScreen> {
       body: _isLoading
           ? const Center(
               child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.orange),
+                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF4F46E5)),
               ),
             )
           : _errorMessage != null
@@ -203,7 +203,7 @@ class _OutletCartScreenState extends State<OutletCartScreen> {
           ElevatedButton(
             onPressed: _loadCartItems,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange[600],
+              backgroundColor: const Color(0xFF4F46E5),
             ),
             child: const Text(
               'Retry',
@@ -246,7 +246,7 @@ class _OutletCartScreenState extends State<OutletCartScreen> {
           ElevatedButton(
             onPressed: () => Navigator.pop(context),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange[600],
+              backgroundColor: const Color(0xFF4F46E5),
             ),
             child: const Text(
               'Continue Shopping',
@@ -314,7 +314,7 @@ class _OutletCartScreenState extends State<OutletCartScreen> {
             width: 50,
             height: 50,
             decoration: BoxDecoration(
-              color: Colors.orange[50],
+              color: const Color(0xFFF3F4F6),
               borderRadius: BorderRadius.circular(8),
               image: item['image_path'] != null
                   ? DecorationImage(
@@ -326,7 +326,7 @@ class _OutletCartScreenState extends State<OutletCartScreen> {
             child: item['image_path'] == null
                 ? Icon(
                     Icons.fastfood,
-                    color: Colors.orange[600],
+                    color: const Color(0xFF4F46E5),
                     size: 24,
                   )
                 : null,
@@ -380,7 +380,7 @@ class _OutletCartScreenState extends State<OutletCartScreen> {
                   child: Icon(
                     Icons.remove,
                     size: 14,
-                    color: Colors.orange[600],
+                    color: const Color(0xFF4F46E5),
                   ),
                 ),
               ),
@@ -405,7 +405,7 @@ class _OutletCartScreenState extends State<OutletCartScreen> {
                   child: Icon(
                     Icons.add,
                     size: 14,
-                    color: Colors.orange[600],
+                    color: const Color(0xFF4F46E5),
                   ),
                 ),
               ),
@@ -496,7 +496,7 @@ class _OutletCartScreenState extends State<OutletCartScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.orange[50],
+              color: const Color(0xFFF3F4F6),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Column(
@@ -566,7 +566,7 @@ class _OutletCartScreenState extends State<OutletCartScreen> {
                       '₹${_total.toStringAsFixed(2)}',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        color: Colors.orange[600],
+                        color: const Color(0xFF4F46E5),
                         fontSize: 16,
                       ),
                     ),
@@ -585,7 +585,7 @@ class _OutletCartScreenState extends State<OutletCartScreen> {
             child: ElevatedButton(
               onPressed: _items.isNotEmpty ? _placeOrder : null,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange[600],
+                backgroundColor: const Color(0xFF4F46E5),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -698,7 +698,7 @@ class _OutletCartScreenState extends State<OutletCartScreen> {
                         ),
                         child: Row(
                           children: [
-                            Icon(Icons.calendar_today, color: Colors.orange[600]),
+                            Icon(Icons.calendar_today, color: const Color(0xFF4F46E5)),
                             const SizedBox(width: 8),
                             Text(
                               '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}',
@@ -730,7 +730,7 @@ class _OutletCartScreenState extends State<OutletCartScreen> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: Colors.orange[600]!),
+                          borderSide: BorderSide(color: const Color(0xFF4F46E5)),
                         ),
                       ),
                     ),
@@ -783,7 +783,7 @@ class _OutletCartScreenState extends State<OutletCartScreen> {
                                     }
                                   });
                                 },
-                                activeColor: Colors.orange[600],
+                                activeColor: const Color(0xFF4F46E5),
                               ),
                               Expanded(
                                 child: Text(
@@ -803,7 +803,7 @@ class _OutletCartScreenState extends State<OutletCartScreen> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.orange[50],
+                        color: const Color(0xFFF3F4F6),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Column(
@@ -845,7 +845,7 @@ class _OutletCartScreenState extends State<OutletCartScreen> {
                                   '₹${(_total - walletAmountToUse).toStringAsFixed(2)}',
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.orange[600],
+                                    color: const Color(0xFF4F46E5),
                                   ),
                                 ),
                               ],
@@ -874,7 +874,7 @@ class _OutletCartScreenState extends State<OutletCartScreen> {
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange[600],
+                    backgroundColor: const Color(0xFF4F46E5),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
