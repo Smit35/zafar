@@ -111,10 +111,10 @@ class _OutletMainScreenState extends State<OutletMainScreen> {
               margin: const EdgeInsets.only(right: 16),
               child: CircleAvatar(
                 radius: 18,
-                backgroundColor: Colors.orange[100],
-                child: const Icon(
+                backgroundColor: Colors.blueGrey[100],
+                child: Icon(
                   Icons.person,
-                  color: Colors.orange,
+                  color: Colors.blueGrey[600]!,
                   size: 20,
                 ),
               ),
@@ -146,7 +146,7 @@ class _OutletMainScreenState extends State<OutletMainScreen> {
           },
           type: BottomNavigationBarType.fixed,
           backgroundColor: Colors.white,
-          selectedItemColor: Colors.orange[600],
+          selectedItemColor: Colors.blueGrey[600],
           unselectedItemColor: Colors.grey[600],
           selectedLabelStyle: const TextStyle(
             fontSize: 12,

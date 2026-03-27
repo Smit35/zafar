@@ -58,7 +58,7 @@ class _OutletProfileScreenState extends State<OutletProfileScreen> {
     if (_isLoading) {
       return Scaffold(
         appBar: AppBar(
-          backgroundColor: Colors.orange[600],
+          backgroundColor: Colors.blueGrey[600],
           foregroundColor: Colors.white,
           title: const Text('Profile'),
           elevation: 0,
@@ -71,7 +71,7 @@ class _OutletProfileScreenState extends State<OutletProfileScreen> {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        backgroundColor: Colors.orange[600],
+        backgroundColor: Colors.blueGrey[600],
         foregroundColor: Colors.white,
         title: const Text('Profile'),
         elevation: 0,
@@ -104,7 +104,7 @@ class _OutletProfileScreenState extends State<OutletProfileScreen> {
     final status = _profileData?['status'] ?? true;
 
     return Container(
-      color: Colors.orange[600],
+      color: Colors.blueGrey[600],
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 30),
       child: Row(
         children: [
@@ -203,7 +203,7 @@ class _OutletProfileScreenState extends State<OutletProfileScreen> {
             icon: Icons.store_outlined,
             label: 'Outlet Name',
             value: outletName,
-            iconColor: Colors.orange,
+            iconColor: Colors.blue[600]!,
           ),
           const SizedBox(height: 20),
           _buildProfileItem(

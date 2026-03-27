@@ -98,7 +98,7 @@ class _OutletDashboardScreenState extends State<OutletDashboardScreen> {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        backgroundColor: Colors.orange[600],
+        backgroundColor: Colors.blueGrey[600],
         foregroundColor: Colors.white,
         title: Text(_outlet?.outletName ?? _user?.name ?? 'Outlet Dashboard'),
         elevation: 0,
@@ -161,7 +161,7 @@ class _OutletDashboardScreenState extends State<OutletDashboardScreen> {
       ),
       body: RefreshIndicator(
         onRefresh: _refreshData,
-        color: Colors.orange[600],
+        color: Colors.blueGrey[600],
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           child: Column(
@@ -180,7 +180,7 @@ class _OutletDashboardScreenState extends State<OutletDashboardScreen> {
 
   Widget _buildOutletHeader() {
     return Container(
-      color: Colors.orange[600],
+      color: Colors.blueGrey[600],
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
       child: Column(
         children: [
@@ -271,7 +271,7 @@ class _OutletDashboardScreenState extends State<OutletDashboardScreen> {
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                const Icon(Icons.analytics, color: Colors.orange, size: 20),
+                const Icon(Icons.analytics, color: Colors.blue, size: 20),
                 const SizedBox(width: 8),
                 const Text(
                   'Today\'s Overview',
@@ -314,7 +314,7 @@ class _OutletDashboardScreenState extends State<OutletDashboardScreen> {
                     'Pending',
                     pendingOrders.toString(),
                     Icons.pending,
-                    Colors.orange,
+                    Colors.blue[600]!,
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -419,7 +419,7 @@ class _OutletDashboardScreenState extends State<OutletDashboardScreen> {
                 child: _buildActionButton(
                   'Menu',
                   Icons.restaurant_menu,
-                  Colors.orange,
+                  Colors.blueGrey[600]!,
                   () => Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -574,7 +574,7 @@ class _OutletDashboardScreenState extends State<OutletDashboardScreen> {
 
     switch (order.status) {
       case "NEW"://OrderStatus.assigned:
-        statusColor = Colors.orange;
+        statusColor = Colors.blue[600]!;
         statusText = 'NEW';
         break;
       case "PREPARING"://OrderStatus.active:

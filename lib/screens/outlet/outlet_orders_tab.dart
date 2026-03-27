@@ -156,7 +156,7 @@ class _OutletOrdersTabState extends State<OutletOrdersTab> {
       case 'pending':
         return Colors.blue;
       case 'accepted':
-        return Colors.orange;
+        return Colors.blue[600]!;
       case 'ready_for_dispatch':
         return Colors.green;
       case 'dispatched':
@@ -196,7 +196,7 @@ class _OutletOrdersTabState extends State<OutletOrdersTab> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Colors.orange),
+                      borderSide: BorderSide(color: Colors.blueGrey[600]!),
                     ),
                     filled: true,
                     fillColor: Colors.grey[50],
@@ -218,7 +218,7 @@ class _OutletOrdersTabState extends State<OutletOrdersTab> {
                               : 'Select Date Range',
                         ),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.orange[600],
+                          backgroundColor: Colors.blueGrey[600],
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -315,7 +315,7 @@ class _OutletOrdersTabState extends State<OutletOrdersTab> {
             color: Colors.grey[300],
           ),
           Expanded(
-            child: _buildStatItem(placedOrders, 'Placed', Colors.orange),
+            child: _buildStatItem(placedOrders, 'Placed', Colors.blueGrey[600]!),
           ),
           Container(
             width: 1,
@@ -541,14 +541,14 @@ class _OutletOrdersTabState extends State<OutletOrdersTab> {
                           ? Colors.red[50] 
                           : order.isOtpVerified 
                               ? Colors.green[50] 
-                              : Colors.orange[50],
+                              : Colors.blueGrey[50],
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
                         color: order.isOtpExpired 
                             ? Colors.red[200]! 
                             : order.isOtpVerified 
                                 ? Colors.green[200]! 
-                                : Colors.orange[200]!,
+                                : Colors.blueGrey[200]!,
                       ),
                     ),
                     child: Row(
@@ -563,7 +563,7 @@ class _OutletOrdersTabState extends State<OutletOrdersTab> {
                               ? Colors.red[700] 
                               : order.isOtpVerified 
                                   ? Colors.green[700] 
-                                  : Colors.orange[700],
+                                  : Colors.blueGrey[700],
                           size: 18,
                         ),
                         const SizedBox(width: 8),
@@ -576,7 +576,7 @@ class _OutletOrdersTabState extends State<OutletOrdersTab> {
                                 ? Colors.red[700] 
                                 : order.isOtpVerified 
                                     ? Colors.green[700] 
-                                    : Colors.orange[700],
+                                    : Colors.blueGrey[700],
                           ),
                         ),
                         Text(
@@ -588,7 +588,7 @@ class _OutletOrdersTabState extends State<OutletOrdersTab> {
                                 ? Colors.red[700] 
                                 : order.isOtpVerified 
                                     ? Colors.green[700] 
-                                    : Colors.orange[700],
+                                    : Colors.blueGrey[700],
                             letterSpacing: 2,
                           ),
                         ),
@@ -860,18 +860,18 @@ class _InwardDialogState extends State<InwardDialog> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.orange[50],
+                  color: Colors.blueGrey[50],
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.orange[200]!),
+                  border: Border.all(color: Colors.blueGrey[200]!),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.info, color: Colors.orange[600]),
+                    Icon(Icons.info, color: Colors.blueGrey[600]),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         'All items in this order have been locked for inward.',
-                        style: TextStyle(color: Colors.orange[700]),
+                        style: TextStyle(color: Colors.blueGrey[700]),
                       ),
                     ),
                   ],

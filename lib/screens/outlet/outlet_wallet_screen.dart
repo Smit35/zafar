@@ -116,7 +116,7 @@ class _OutletWalletScreenState extends State<OutletWalletScreen> {
               'Wallet Balance',
               '₹${_walletBalance.toStringAsFixed(2)}',
               Icons.account_balance_wallet,
-              Colors.orange[600]!,
+              Colors.blueGrey[600]!,
             ),
           ),
           const SizedBox(width: 12),
@@ -698,7 +698,7 @@ class _OutletWalletScreenState extends State<OutletWalletScreen> {
                   child: Text(
                     'View All',
                     style: TextStyle(
-                      color: Colors.orange[600],
+                      color: Colors.blueGrey[600],
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -777,7 +777,7 @@ class _OutletWalletScreenState extends State<OutletWalletScreen> {
         break;
       case 'commission':
         icon = Icons.percent;
-        iconColor = Colors.orange;
+        iconColor = Colors.blueGrey[600]!;
         break;
       default:
         icon = Icons.account_balance_wallet;
@@ -830,7 +830,7 @@ class _OutletWalletScreenState extends State<OutletWalletScreen> {
                       decoration: BoxDecoration(
                         color: status == 'completed' 
                             ? Colors.green.withOpacity(0.1)
-                            : Colors.orange.withOpacity(0.1),
+                            : Colors.blueGrey.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
@@ -838,7 +838,7 @@ class _OutletWalletScreenState extends State<OutletWalletScreen> {
                         style: TextStyle(
                           fontSize: 8,
                           fontWeight: FontWeight.w600,
-                          color: status == 'completed' ? Colors.green : Colors.orange,
+                          color: status == 'completed' ? Colors.green : Colors.blueGrey[600]!,
                         ),
                       ),
                     ),
@@ -974,7 +974,7 @@ class _OutletWalletScreenState extends State<OutletWalletScreen> {
           ElevatedButton(
             onPressed: () => Navigator.pop(context),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange[600],
+              backgroundColor: Colors.blueGrey[600],
             ),
             child: const Text('Withdraw', style: TextStyle(color: Colors.white)),
           ),

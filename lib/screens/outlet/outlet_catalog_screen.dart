@@ -148,7 +148,7 @@ class _OutletCatalogScreenState extends State<OutletCatalogScreen> {
               margin: const EdgeInsets.symmetric(horizontal: 16),
               child: FloatingActionButton.extended(
                 onPressed: totalItems > 0 ? _proceedToCheckout : _goToCart,
-                backgroundColor: Colors.orange[600],
+                backgroundColor: Colors.blueGrey[600],
                 elevation: 8,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(30),
@@ -242,10 +242,10 @@ class _OutletCatalogScreenState extends State<OutletCatalogScreen> {
               margin: const EdgeInsets.only(right: 12, top: 8, bottom: 8),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: isSelected ? Colors.orange[600] : Colors.transparent,
+                color: isSelected ? Colors.blueGrey[600] : Colors.transparent,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: isSelected ? Colors.orange[600]! : Colors.grey[300]!,
+                  color: isSelected ? Colors.blueGrey[600]! : Colors.grey[300]!,
                 ),
               ),
               child: Text(
@@ -267,7 +267,7 @@ class _OutletCatalogScreenState extends State<OutletCatalogScreen> {
     if (_isLoading) {
       return const Center(
         child: CircularProgressIndicator(
-          valueColor: AlwaysStoppedAnimation<Color>(Colors.orange),
+          valueColor: AlwaysStoppedAnimation<Color>(Colors.blueGrey),
         ),
       );
     }
@@ -304,7 +304,7 @@ class _OutletCatalogScreenState extends State<OutletCatalogScreen> {
             ElevatedButton(
               onPressed: _loadInventory,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange[600],
+                backgroundColor: Colors.blueGrey[600],
               ),
               child: const Text(
                 'Retry',
@@ -457,7 +457,7 @@ class _OutletCatalogScreenState extends State<OutletCatalogScreen> {
                     width: 60,
                     height: 60,
                     decoration: BoxDecoration(
-                      color: Colors.orange[50],
+                      color: Colors.blueGrey[50],
                       borderRadius: BorderRadius.circular(12),
                       image: item.imagePath != null
                           ? DecorationImage(
@@ -469,7 +469,7 @@ class _OutletCatalogScreenState extends State<OutletCatalogScreen> {
                     child: item.imagePath == null
                         ? Icon(
                             Icons.fastfood,
-                            color: Colors.orange[600],
+                            color: Colors.blueGrey[600],
                             size: 30,
                           )
                         : null,
@@ -574,7 +574,7 @@ class _OutletCatalogScreenState extends State<OutletCatalogScreen> {
                         Icons.remove,
                         size: 16,
                         color: currentQuantity > 0 
-                            ? Colors.orange[600] 
+                            ? Colors.blueGrey[600] 
                             : Colors.grey[400],
                       ),
                     ),
@@ -605,7 +605,7 @@ class _OutletCatalogScreenState extends State<OutletCatalogScreen> {
                         Icons.add,
                         size: 16,
                         color: item.isInStock 
-                            ? Colors.orange[600] 
+                            ? Colors.blueGrey[600] 
                             : Colors.grey[400],
                       ),
                     ),
@@ -663,7 +663,7 @@ class _OutletCatalogScreenState extends State<OutletCatalogScreen> {
               // Add item logic
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange[600],
+              backgroundColor: Colors.blueGrey[600],
             ),
             child: const Text('Add Item', style: TextStyle(color: Colors.white)),
           ),
@@ -719,7 +719,7 @@ class _OutletCatalogScreenState extends State<OutletCatalogScreen> {
               // Update item logic
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange[600],
+              backgroundColor: Colors.blueGrey[600],
             ),
             child: const Text('Update', style: TextStyle(color: Colors.white)),
           ),

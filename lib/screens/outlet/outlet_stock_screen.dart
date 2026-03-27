@@ -105,7 +105,7 @@ class _OutletReturnScreenState extends State<OutletReturnScreen> {
                 child: _buildOverviewCard(
                   'Pending',
                   _stats?.pendingCount.toString() ?? '0',
-                  Colors.orange,
+                  Colors.blueGrey[600]!,
                   Icons.pending_actions,
                 ),
               ),
@@ -298,7 +298,7 @@ class _OutletReturnScreenState extends State<OutletReturnScreen> {
             child: ElevatedButton.icon(
               onPressed: _openReportDamageScreen,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange[600],
+                backgroundColor: Colors.blueGrey[600]!,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(
@@ -420,7 +420,7 @@ class _OutletReturnScreenState extends State<OutletReturnScreen> {
     
     switch (status.toLowerCase()) {
       case 'pending':
-        color = Colors.orange;
+        color = Colors.blueGrey[600]!;
         text = 'PENDING';
         break;
       case 'approved':

@@ -136,14 +136,14 @@ class _OutletHomeTabState extends State<OutletHomeTab> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Colors.orange[400]!, Colors.orange[600]!],
+          colors: [Colors.blueGrey[400]!, Colors.blueGrey[600]!],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.orange.withAlpha(77),
+            color: Colors.blueGrey.withAlpha(77),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -243,7 +243,7 @@ class _OutletHomeTabState extends State<OutletHomeTab> {
             'Pending Orders',
             _pendingOrders.toString(),
             Icons.pending_outlined,
-            Colors.orange,
+            Colors.blue[600]!,
           ),
         ),
         const SizedBox(width: 12),
@@ -323,7 +323,7 @@ class _OutletHomeTabState extends State<OutletHomeTab> {
               child: Text(
                 'View All',
                 style: TextStyle(
-                  color: Colors.orange[600],
+                  color: Colors.blueGrey[600],
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -394,7 +394,7 @@ class _OutletHomeTabState extends State<OutletHomeTab> {
         break;
       case 'preparing':
       case 'accepted':
-        statusColor = Colors.orange;
+        statusColor = Colors.blue[600]!;
         break;
       case 'cancelled':
         statusColor = Colors.red;
