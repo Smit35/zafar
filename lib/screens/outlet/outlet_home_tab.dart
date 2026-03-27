@@ -6,7 +6,9 @@ import '../../models/order.dart';
 import 'package:intl/intl.dart';
 
 class OutletHomeTab extends StatefulWidget {
-  const OutletHomeTab({super.key});
+  final VoidCallback? onViewAllOrders;
+  
+  const OutletHomeTab({super.key, this.onViewAllOrders});
 
   @override
   State<OutletHomeTab> createState() => _OutletHomeTabState();
@@ -318,7 +320,7 @@ class _OutletHomeTabState extends State<OutletHomeTab> {
             const Spacer(),
             TextButton(
               onPressed: () {
-                // Navigate to all orders
+                widget.onViewAllOrders?.call();
               },
               child: Text(
                 'View All',
