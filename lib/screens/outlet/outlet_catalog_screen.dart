@@ -197,12 +197,13 @@ class _OutletCatalogScreenState extends State<OutletCatalogScreen> {
 
   Widget _buildSearchSection() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
       color: Colors.white,
       child: Container(
+        height: 44,
         decoration: BoxDecoration(
           color: const Color(0xFFF9FAFB),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: const Color(0xFFE5E7EB),
             width: 1,
@@ -210,25 +211,23 @@ class _OutletCatalogScreenState extends State<OutletCatalogScreen> {
         ),
         child: TextField(
           controller: _searchController,
+          style: const TextStyle(
+            fontSize: 14,
+            color: Color(0xFF111827),
+          ),
           decoration: const InputDecoration(
             hintText: 'Search products by name or SKU...',
             hintStyle: TextStyle(
               color: Color(0xFF9CA3AF),
-              fontSize: 15,
-              fontWeight: FontWeight.w400,
+              fontSize: 14,
             ),
             prefixIcon: Icon(
               Icons.search_rounded,
               color: Color(0xFF6B7280),
-              size: 20,
+              size: 18,
             ),
             border: InputBorder.none,
-            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          ),
-          style: const TextStyle(
-            fontSize: 15,
-            color: Color(0xFF111827),
-            fontWeight: FontWeight.w500,
+            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           ),
           onChanged: (value) {
             _filterItems();

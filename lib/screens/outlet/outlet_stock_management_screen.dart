@@ -247,32 +247,40 @@ class _OutletStockManagementScreenState extends State<OutletStockManagementScree
 
   Widget _buildSearchSection() {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      color: Colors.white,
+      child: Container(
+        height: 44,
+        decoration: BoxDecoration(
+          color: const Color(0xFFF9FAFB),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: const Color(0xFFE5E7EB),
+            width: 1,
           ),
-        ],
-      ),
-      child: TextField(
-        controller: _searchController,
-        decoration: InputDecoration(
-          hintText: 'Search by product name or SKU...',
-          hintStyle: TextStyle(color: Colors.grey[500], fontSize: 14),
-          prefixIcon: Icon(Icons.search, color: Colors.grey[500]),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide(color: Colors.grey[300]!),
-          ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         ),
-        onChanged: (value) => _filterInventory(),
+        child: TextField(
+          controller: _searchController,
+          style: const TextStyle(
+            fontSize: 14,
+            color: Color(0xFF111827),
+          ),
+          decoration: const InputDecoration(
+            hintText: 'Search by product name or SKU...',
+            hintStyle: TextStyle(
+              color: Color(0xFF9CA3AF),
+              fontSize: 14,
+            ),
+            prefixIcon: Icon(
+              Icons.search_rounded,
+              color: Color(0xFF6B7280),
+              size: 18,
+            ),
+            border: InputBorder.none,
+            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          ),
+          onChanged: (value) => _filterInventory(),
+        ),
       ),
     );
   }
