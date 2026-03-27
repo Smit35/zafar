@@ -21,8 +21,8 @@ class _OutletMainScreenState extends State<OutletMainScreen> {
   String _outletName = 'Outlet 1';
   String _ownerName = 'Owner';
 
-  final List<Widget> _screens = [
-    const OutletHomeTab(),
+  List<Widget> get _screens => [
+    OutletHomeTab(onViewAllOrders: _navigateToOrders),
     const OutletCatalogScreen(),
     const OutletOrdersTab(),
     const OutletStockManagementScreen(),
@@ -61,6 +61,12 @@ class _OutletMainScreenState extends State<OutletMainScreen> {
     } catch (e) {
       // Error loading outlet data - using default values
     }
+  }
+
+  void _navigateToOrders() {
+    setState(() {
+      _selectedIndex = 2; // Orders tab index
+    });
   }
 
   @override
