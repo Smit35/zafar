@@ -65,7 +65,7 @@ class _EligibleOrdersScreenState extends State<EligibleOrdersScreen> {
             color: Colors.white,
           ),
         ),
-        backgroundColor: Colors.orange[600],
+        backgroundColor: Colors.blueGrey[600],
         foregroundColor: Colors.white,
         elevation: 0,
       ),
@@ -102,7 +102,7 @@ class _EligibleOrdersScreenState extends State<EligibleOrdersScreen> {
             ElevatedButton.icon(
               onPressed: _loadEligibleOrders,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange[600],
+                backgroundColor: Colors.blueGrey[600],
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 24,
@@ -228,14 +228,14 @@ class _EligibleOrdersScreenState extends State<EligibleOrdersScreen> {
                         color: hoursRemaining > 12 
                             ? Colors.green[50]
                             : hoursRemaining > 6 
-                                ? Colors.orange[50]
+                                ? Colors.blueGrey[50]
                                 : Colors.red[50],
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                           color: hoursRemaining > 12 
                               ? Colors.green[200]!
                               : hoursRemaining > 6 
-                                  ? Colors.orange[200]!
+                                  ? Colors.blueGrey[200]!
                                   : Colors.red[200]!,
                         ),
                       ),
@@ -247,7 +247,7 @@ class _EligibleOrdersScreenState extends State<EligibleOrdersScreen> {
                           color: hoursRemaining > 12 
                               ? Colors.green[700]
                               : hoursRemaining > 6 
-                                  ? Colors.orange[700]
+                                  ? Colors.blueGrey[700]
                                   : Colors.red[700],
                         ),
                       ),
@@ -348,7 +348,7 @@ class _EligibleOrdersScreenState extends State<EligibleOrdersScreen> {
                     ElevatedButton(
                       onPressed: () => _showReturnDetailsDialog(order),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orange[600],
+                        backgroundColor: Colors.blueGrey[600],
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         shape: RoundedRectangleBorder(
@@ -461,7 +461,7 @@ class _ReturnDetailsDialogState extends State<ReturnDetailsDialog> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.orange[600],
+              color: Colors.blueGrey[600],
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(16),
                 topRight: Radius.circular(16),
@@ -618,7 +618,7 @@ class _ReturnDetailsDialogState extends State<ReturnDetailsDialog> {
                   onPressed: () => Navigator.of(context).pop(),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 12),
-                    side: BorderSide(color: Colors.orange[600]!),
+                    side: BorderSide(color: Colors.blueGrey[600]!),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -626,7 +626,7 @@ class _ReturnDetailsDialogState extends State<ReturnDetailsDialog> {
                   child: Text(
                     'Close',
                     style: TextStyle(
-                      color: Colors.orange[600],
+                      color: Colors.blueGrey[600],
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -648,7 +648,7 @@ class _ReturnDetailsDialogState extends State<ReturnDetailsDialog> {
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange[600],
+                    backgroundColor: Colors.blueGrey[600],
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(
@@ -687,7 +687,7 @@ class _ReturnDetailsDialogState extends State<ReturnDetailsDialog> {
                 Icon(
                   icon,
                   size: 20,
-                  color: Colors.orange[600],
+                  color: Colors.blueGrey[600],
                 ),
                 const SizedBox(width: 8),
                 Text(
@@ -757,8 +757,8 @@ class _ReturnDetailsDialogState extends State<ReturnDetailsDialog> {
     
     switch (status.toLowerCase()) {
       case 'pending':
-        statusColor = Colors.orange[700]!;
-        bgColor = Colors.orange[50]!;
+        statusColor = Colors.blueGrey[700]!;
+        bgColor = Colors.blueGrey[50]!;
         break;
       case 'approved':
         statusColor = Colors.green[700]!;
@@ -827,7 +827,7 @@ class _ReturnDetailsDialogState extends State<ReturnDetailsDialog> {
                 Icon(
                   Icons.photo_library,
                   size: 20,
-                  color: Colors.orange[600],
+                  color: Colors.blueGrey[600],
                 ),
                 const SizedBox(width: 8),
                 const Text(
@@ -959,6 +959,7 @@ class _ReturnFormDialogState extends State<ReturnFormDialog> {
         'remarks': TextEditingController(),
         'max_qty': double.parse(item['qty_ordered'].toString()),
         'item_data': item,
+        'is_selected': false,
       };
     }
   }
@@ -987,7 +988,7 @@ class _ReturnFormDialogState extends State<ReturnFormDialog> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.orange[600],
+              color: Colors.blueGrey[600],
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(16),
                 topRight: Radius.circular(16),
@@ -1061,7 +1062,7 @@ class _ReturnFormDialogState extends State<ReturnFormDialog> {
                             onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(),
                             style: OutlinedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 16),
-                              side: BorderSide(color: Colors.orange[600]!),
+                              side: BorderSide(color: Colors.blueGrey[600]!),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(8),
                               ),
@@ -1069,7 +1070,7 @@ class _ReturnFormDialogState extends State<ReturnFormDialog> {
                             child: Text(
                               'Cancel',
                               style: TextStyle(
-                                color: Colors.orange[600],
+                                color: Colors.blueGrey[600],
                                 fontWeight: FontWeight.w600,
                                 fontSize: 16,
                               ),
@@ -1081,7 +1082,7 @@ class _ReturnFormDialogState extends State<ReturnFormDialog> {
                           child: ElevatedButton(
                             onPressed: _isSubmitting ? null : _submitReturnRequest,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.orange[600],
+                              backgroundColor: Colors.blueGrey[600],
                               foregroundColor: Colors.white,
                               padding: const EdgeInsets.symmetric(vertical: 16),
                               shape: RoundedRectangleBorder(
@@ -1134,7 +1135,7 @@ class _ReturnFormDialogState extends State<ReturnFormDialog> {
         children: [
           Row(
             children: [
-              Icon(Icons.info_outline, color: Colors.orange[600], size: 20),
+              Icon(Icons.info_outline, color: Colors.blueGrey[600], size: 20),
               const SizedBox(width: 8),
               const Text(
                 'Order Information',
@@ -1204,7 +1205,7 @@ class _ReturnFormDialogState extends State<ReturnFormDialog> {
       children: [
         Row(
           children: [
-            Icon(Icons.inventory_2_outlined, color: Colors.orange[600], size: 20),
+            Icon(Icons.inventory_2_outlined, color: Colors.blueGrey[600], size: 20),
             const SizedBox(width: 8),
             const Text(
               'Items to Return',
@@ -1247,10 +1248,30 @@ class _ReturnFormDialogState extends State<ReturnFormDialog> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Product info
+          // Checkbox and product info
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Checkbox for selection
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Checkbox(
+                  value: formData['is_selected'] as bool,
+                  onChanged: (value) {
+                    setState(() {
+                      formData['is_selected'] = value ?? false;
+                      // Clear form data when unchecked
+                      if (!value!) {
+                        qtyController.clear();
+                        remarksController.clear();
+                        formData['reason'] = _returnReasons[0];
+                      }
+                    });
+                  },
+                  activeColor: Colors.blueGrey[600],
+                ),
+              ),
+              const SizedBox(width: 8),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1406,7 +1427,7 @@ class _ReturnFormDialogState extends State<ReturnFormDialog> {
       children: [
         Row(
           children: [
-            Icon(Icons.photo_camera, color: Colors.orange[600], size: 20),
+            Icon(Icons.photo_camera, color: Colors.blueGrey[600], size: 20),
             const SizedBox(width: 8),
             const Text(
               'Photo Evidence',
@@ -1542,20 +1563,21 @@ class _ReturnFormDialogState extends State<ReturnFormDialog> {
       return;
     }
 
-    // Validate that at least one item has return quantity
-    bool hasItems = false;
+    // Validate that at least one item is selected and has return quantity
+    bool hasSelectedItems = false;
     for (var formData in _itemFormData.values) {
+      final isSelected = formData['is_selected'] as bool;
       final qtyController = formData['return_qty'] as TextEditingController;
-      if (qtyController.text.isNotEmpty && double.tryParse(qtyController.text) != null && double.parse(qtyController.text) > 0) {
-        hasItems = true;
+      if (isSelected && qtyController.text.isNotEmpty && double.tryParse(qtyController.text) != null && double.parse(qtyController.text) > 0) {
+        hasSelectedItems = true;
         break;
       }
     }
 
-    if (!hasItems) {
+    if (!hasSelectedItems) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please specify return quantity for at least one item'),
+          content: Text('Please select at least one item and specify return quantity'),
           backgroundColor: Colors.red,
         ),
       );
@@ -1567,15 +1589,16 @@ class _ReturnFormDialogState extends State<ReturnFormDialog> {
     });
 
     try {
-      // Prepare items data
+      // Prepare items data - only process selected items
       List<Map<String, dynamic>> items = [];
       for (var entry in _itemFormData.entries) {
         final itemId = entry.key;
         final formData = entry.value;
+        final isSelected = formData['is_selected'] as bool;
         final qtyController = formData['return_qty'] as TextEditingController;
         final remarksController = formData['remarks'] as TextEditingController;
         
-        if (qtyController.text.isNotEmpty && double.parse(qtyController.text) > 0) {
+        if (isSelected && qtyController.text.isNotEmpty && double.parse(qtyController.text) > 0) {
           items.add({
             'order_item_id': itemId,
             'returned_qty': qtyController.text,
