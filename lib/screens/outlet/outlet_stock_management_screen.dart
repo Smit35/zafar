@@ -36,22 +36,21 @@ class _OutletStockManagementScreenState extends State<OutletStockManagementScree
       final response = await _apiService.getOutletInventory();
       
       if (response['success']) {
-        final inventoryData = response['items'] ?? [];
+        final inventoryItems = response['items'] ?? [];
         setState(() {
-          _inventoryItems = inventoryData.map<Map<String, dynamic>>((item) {
-            // Handle the API response structure from your example
-            final inventory = item['inventory'] ?? {};
+          _inventoryItems = inventoryItems.where((item) => item != null).map<Map<String, dynamic>>((item) {
             return {
-              'id': item['id'],
-              'name': item['name'] ?? '',
-              'sku': item['sku'] ?? '',
-              'category': item['category']?['name'] ?? '',
-              'available_stock': double.parse(inventory['available_stock']?.toString() ?? '0'),
-              'min_alert_level': double.parse(inventory['min_alert_level']?.toString() ?? '0'),
-              'total_stock': double.parse(inventory['total_stock']?.toString() ?? '0'),
-              'reserved_stock': double.parse(inventory['reserved_stock']?.toString() ?? '0'),
-              'uom': item['uom'] ?? '',
-              'price': item['price'] ?? '',
+              'id': item.id,
+              'product_name': item.name ?? 'Unknown Product',
+              'product_sku': item.sku ?? '',
+              'product_image': item.imagePath ?? '',
+              'category_name': item.category?.name ?? 'Unknown Category',
+              'available_stock': item.stockSummary?.availableStock?.toDouble() ?? 0.0,
+              'min_alert_level': double.tryParse(item.minAlertLevel.toString()) ?? 0.0,
+              'is_low_stock': item.stockSummary?.isLowStock ?? false,
+              'base_unit_name': item.uom ?? 'PCS',
+              'base_unit_abbreviation': item.uom ?? 'PCS',
+              'product_price': item.price ?? '0',
             };
           }).toList();
           
@@ -84,7 +83,7 @@ class _OutletStockManagementScreenState extends State<OutletStockManagementScree
   void _calculateStats() {
     _totalTrackedProducts = _inventoryItems.length;
     _lowStockAlerts = _inventoryItems.where((item) => 
-      item['available_stock'] <= item['min_alert_level']
+      item['is_low_stock'] == true
     ).length;
   }
 
@@ -110,8 +109,8 @@ class _OutletStockManagementScreenState extends State<OutletStockManagementScree
     } else {
       setState(() {
         _filteredItems = _inventoryItems.where((item) {
-          final name = item['name'].toString().toLowerCase();
-          final sku = item['sku'].toString().toLowerCase();
+          final name = item['product_name'].toString().toLowerCase();
+          final sku = item['product_sku'].toString().toLowerCase();
           return name.contains(query) || sku.contains(query);
         }).toList();
       });
@@ -124,14 +123,14 @@ class _OutletStockManagementScreenState extends State<OutletStockManagementScree
       backgroundColor: Colors.grey[50],
       body: RefreshIndicator(
         onRefresh: _refreshInventory,
-        child: Column(
-          children: [
-            _buildStatsCard(),
-            _buildSearchSection(),
-            Expanded(
-              child: _buildInventoryTable(),
-            ),
-          ],
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              _buildStatsCard(),
+              _buildSearchSection(),
+              _buildInventoryList(),
+            ],
+          ),
         ),
       ),
     );
@@ -175,8 +174,8 @@ class _OutletStockManagementScreenState extends State<OutletStockManagementScree
                 IconButton(
                   onPressed: _refreshInventory,
                   style: IconButton.styleFrom(
-                    backgroundColor: Colors.orange[50],
-                    foregroundColor: Colors.orange[600],
+                    backgroundColor: Colors.blueGrey[50],
+                    foregroundColor: Colors.blueGrey[600],
                     padding: const EdgeInsets.all(8),
                   ),
                   icon: const Icon(Icons.refresh, size: 20),
@@ -285,67 +284,79 @@ class _OutletStockManagementScreenState extends State<OutletStockManagementScree
     );
   }
 
-  Widget _buildInventoryTable() {
+  Widget _buildInventoryList() {
     if (_isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(),
+      return Container(
+        height: 200,
+        margin: const EdgeInsets.all(16),
+        child: const Center(
+          child: CircularProgressIndicator(),
+        ),
       );
     }
 
     if (_filteredItems.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              _searchController.text.isNotEmpty 
-                  ? Icons.search_off 
-                  : Icons.inventory_2_outlined,
-              size: 64,
-              color: Colors.grey[400],
-            ),
-            const SizedBox(height: 16),
-            Text(
-              _searchController.text.isNotEmpty 
-                  ? 'No products found'
-                  : 'No inventory items',
-              style: const TextStyle(
-                fontSize: 16,
-                color: Colors.grey,
+      return Container(
+        height: 200,
+        margin: const EdgeInsets.all(16),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                _searchController.text.isNotEmpty 
+                    ? Icons.search_off 
+                    : Icons.inventory_2_outlined,
+                size: 64,
+                color: Colors.grey[400],
               ),
-            ),
-            if (_searchController.text.isNotEmpty) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: 16),
               Text(
-                'Try searching with a different term',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[500],
+                _searchController.text.isNotEmpty 
+                    ? 'No products found'
+                    : 'No inventory items',
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey,
                 ),
               ),
+              if (_searchController.text.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Text(
+                  'Try searching with a different term',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[500],
+                  ),
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       );
     }
 
     return Container(
       margin: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(12),
+                topRight: Radius.circular(12),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.1),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
             child: Row(
               children: [
                 const Text(
@@ -366,123 +377,181 @@ class _OutletStockManagementScreenState extends State<OutletStockManagementScree
               ],
             ),
           ),
-          Expanded(
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: SingleChildScrollView(
-                child: DataTable(
-                  columnSpacing: 20,
-                  headingRowColor: WidgetStateProperty.all(Colors.grey[50]),
-                  columns: const [
-                    DataColumn(
-                      label: Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          'Product Details',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ),
-                    DataColumn(
-                      label: Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          'Min Level',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ),
-                    DataColumn(
-                      label: Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          'Available Stock',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ),
-                    DataColumn(
-                      label: Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          'Status',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ),
-                  ],
-                  rows: _filteredItems.map((item) {
-                    final availableStock = item['available_stock'];
-                    final minLevel = item['min_alert_level'];
-                    final isLowStock = availableStock <= minLevel;
-                    
-                    return DataRow(
-                      cells: [
-                        DataCell(
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                item['name'],
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              Text(
-                                'SKU: ${item['sku']}',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey[600],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        DataCell(
-                          Text(
-                            '${minLevel.toStringAsFixed(0)} ${item['uom']}',
-                            style: const TextStyle(fontSize: 12),
-                          ),
-                        ),
-                        DataCell(
-                          Text(
-                            '${availableStock.toStringAsFixed(0)} ${item['uom']}',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: isLowStock ? Colors.red : Colors.green,
-                            ),
-                          ),
-                        ),
-                        DataCell(
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: isLowStock 
-                                  ? Colors.red.withOpacity(0.1)
-                                  : Colors.green.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              isLowStock ? 'LOW STOCK' : 'IN STOCK',
-                              style: TextStyle(
-                                color: isLowStock ? Colors.red : Colors.green,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 10,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    );
-                  }).toList(),
+          ..._filteredItems.map((item) => _buildInventoryCard(item)).toList(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInventoryCard(Map<String, dynamic> item) {
+    final isLowStock = item['is_low_stock'] as bool;
+    final availableStock = item['available_stock'];
+    final minAlertLevel = item['min_alert_level'];
+    final baseUnitAbbr = item['base_unit_abbreviation'];
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: const Color(0xFFE5E7EB),
+          width: 1.5,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Product Image
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                color: const Color(0xFFF3F4F6),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: const Color(0xFFE5E7EB),
+                  width: 1,
                 ),
+                image: item['product_image'] != null && item['product_image'].isNotEmpty
+                    ? DecorationImage(
+                        image: NetworkImage(
+                          '${ApiService.baseUrl}/storage/${item['product_image']}',
+                        ),
+                        fit: BoxFit.cover,
+                        onError: (error, stackTrace) {
+                          // Handle image loading error
+                        },
+                      )
+                    : null,
+              ),
+              child: item['product_image'] == null || item['product_image'].isEmpty
+                  ? const Icon(
+                      Icons.inventory_2_outlined,
+                      color: Color(0xFF9CA3AF),
+                      size: 28,
+                    )
+                  : null,
+            ),
+            
+            const SizedBox(width: 12),
+            
+            // Product Details
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item['product_name'],
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF111827),
+                      height: 1.3,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'SKU: ${item['product_sku']}',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFF6B7280),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Category: ${item['category_name']}',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFF6B7280),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      // Stock Status Badge
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.transparent,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: isLowStock 
+                                ? const Color(0xFFEF4444)
+                                : const Color(0xFF10B981),
+                            width: 1,
+                          ),
+                        ),
+                        child: Text(
+                          isLowStock 
+                              ? 'Low Stock (${availableStock.toStringAsFixed(0)})'
+                              : 'In Stock (${availableStock.toStringAsFixed(0)})',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: isLowStock 
+                                ? const Color(0xFFEF4444)
+                                : const Color(0xFF10B981),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
-          ),
-        ],
+            
+            const SizedBox(width: 12),
+            
+            // Price and Min Level
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                RichText(
+                  text: TextSpan(
+                    children: [
+                      const TextSpan(
+                        text: '₹',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF111827),
+                        ),
+                      ),
+                      TextSpan(
+                        text: item['product_price'],
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF111827),
+                          height: 1.2,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Min: ${minAlertLevel.toStringAsFixed(0)} $baseUnitAbbr',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: Color(0xFF6B7280),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
