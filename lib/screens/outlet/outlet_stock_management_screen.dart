@@ -220,8 +220,8 @@ class _OutletStockManagementScreenState extends State<OutletStockManagementScree
       ),
       child: Column(
         children: [
-          Icon(icon, color: color, size: 32),
-          const SizedBox(height: 8),
+          // Icon(icon, color: color, size: 32),
+          // const SizedBox(height: 8),
           Text(
             count,
             style: TextStyle(

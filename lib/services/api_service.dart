@@ -965,13 +965,10 @@ class ApiService {
   }
 
   // Get outlet inventory
-  Future<Map<String, dynamic>> getOutletInventory({
-    int page = 1,
-    int perPage = 50,
-  }) async {
+  Future<Map<String, dynamic>> getOutletInventory() async {
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl$apiVersion/outlet/inventory?page=$page&per_page=$perPage'),
+        Uri.parse('$baseUrl$apiVersion/outlet/inventory'),
         headers: _headers,
       );
 
