@@ -54,6 +54,18 @@ class _OutletReturnScreenState extends State<OutletReturnScreen> {
     );
   }
 
+  Future<void> _refreshData() async {
+    setState(() {
+      _isRefreshing = true;
+    });
+    
+    await _refreshReturns();
+    
+    setState(() {
+      _isRefreshing = false;
+    });
+  }
+
   Widget _buildStatsCard() {
     return Container(
       margin: const EdgeInsets.all(16),
@@ -87,6 +99,17 @@ class _OutletReturnScreenState extends State<OutletReturnScreen> {
                   width: 16,
                   height: 16,
                   child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              else
+                IconButton(
+                  onPressed: _refreshData,
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.blueGrey[50],
+                    foregroundColor: Colors.blueGrey[600],
+                    padding: const EdgeInsets.all(8),
+                  ),
+                  icon: const Icon(Icons.refresh, size: 20),
+                  tooltip: 'Refresh Returns',
                 ),
             ],
           ),

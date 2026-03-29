@@ -539,15 +539,15 @@ class _OutletStockManagementScreenState extends State<OutletStockManagementScree
                     ],
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  'Min: ${minAlertLevel.toStringAsFixed(0)} $baseUnitAbbr',
-                  style: const TextStyle(
-                    fontSize: 11,
-                    color: Color(0xFF6B7280),
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
+                // const SizedBox(height: 4),
+                // Text(
+                //   'Min: ${minAlertLevel.toStringAsFixed(0)} $baseUnitAbbr',
+                //   style: const TextStyle(
+                //     fontSize: 11,
+                //     color: Color(0xFF6B7280),
+                //     fontWeight: FontWeight.w500,
+                //   ),
+                // ),
               ],
             ),
           ],

@@ -20,6 +20,7 @@ class _OutletCatalogScreenState extends State<OutletCatalogScreen> {
   List<InventoryItem> _filteredItems = [];
   List<String> _categories = ['All Items'];
   bool _isLoading = true;
+  bool _isRefreshing = false;
   String? _errorMessage;
   Map<int, int> _quantities = {};
   List<CartItem> _cartItems = [];
@@ -195,44 +196,96 @@ class _OutletCatalogScreenState extends State<OutletCatalogScreen> {
     );
   }
 
+  Future<void> _refreshData() async {
+    setState(() {
+      _isRefreshing = true;
+    });
+    
+    await Future.wait([
+      _loadInventory(),
+      _loadCartItems(),
+    ]);
+    
+    setState(() {
+      _isRefreshing = false;
+    });
+  }
+
   Widget _buildSearchSection() {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
       color: Colors.white,
-      child: Container(
-        height: 44,
-        decoration: BoxDecoration(
-          color: const Color(0xFFF9FAFB),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: const Color(0xFFE5E7EB),
-            width: 1,
+      child: Column(
+        children: [
+          // Header with title and refresh button
+          Row(
+            children: [
+              const Text(
+                'Product Catalog',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              const Spacer(),
+              if (_isRefreshing)
+                const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              else
+                IconButton(
+                  onPressed: _refreshData,
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.blueGrey[50],
+                    foregroundColor: Colors.blueGrey[600],
+                    padding: const EdgeInsets.all(8),
+                  ),
+                  icon: const Icon(Icons.refresh, size: 20),
+                  tooltip: 'Refresh Catalog',
+                ),
+            ],
           ),
-        ),
-        child: TextField(
-          controller: _searchController,
-          style: const TextStyle(
-            fontSize: 14,
-            color: Color(0xFF111827),
-          ),
-          decoration: const InputDecoration(
-            hintText: 'Search products by name or SKU...',
-            hintStyle: TextStyle(
-              color: Color(0xFF9CA3AF),
-              fontSize: 14,
+          const SizedBox(height: 16),
+          // Search bar
+          Container(
+            height: 44,
+            decoration: BoxDecoration(
+              color: const Color(0xFFF9FAFB),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: const Color(0xFFE5E7EB),
+                width: 1,
+              ),
             ),
-            prefixIcon: Icon(
-              Icons.search_rounded,
-              color: Color(0xFF6B7280),
-              size: 18,
+            child: TextField(
+              controller: _searchController,
+              style: const TextStyle(
+                fontSize: 14,
+                color: Color(0xFF111827),
+              ),
+              decoration: const InputDecoration(
+                hintText: 'Search products by name or SKU...',
+                hintStyle: TextStyle(
+                  color: Color(0xFF9CA3AF),
+                  fontSize: 14,
+                ),
+                prefixIcon: Icon(
+                  Icons.search_rounded,
+                  color: Color(0xFF6B7280),
+                  size: 18,
+                ),
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              ),
+              onChanged: (value) {
+                _filterItems();
+              },
             ),
-            border: InputBorder.none,
-            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           ),
-          onChanged: (value) {
-            _filterItems();
-          },
-        ),
+        ],
       ),
     );
   }

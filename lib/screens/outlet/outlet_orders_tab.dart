@@ -20,6 +20,7 @@ class _OutletOrdersTabState extends State<OutletOrdersTab> {
   List<Order> _orders = [];
   List<Order> _filteredOrders = [];
   bool _isLoading = false;
+  bool _isRefreshing = false;
   Map<String, dynamic>? _dashboardStats;
   
   @override
@@ -231,6 +232,18 @@ class _OutletOrdersTabState extends State<OutletOrdersTab> {
     );
   }
 
+  Future<void> _refreshData() async {
+    setState(() {
+      _isRefreshing = true;
+    });
+    
+    await _loadOrders();
+    
+    setState(() {
+      _isRefreshing = false;
+    });
+  }
+
   Widget _buildStatsCard() {
     final totalOrders = _dashboardStats?['total_orders']?.toString() ?? '0';
     final placedOrders = _dashboardStats?['draft_orders']?.toString() ?? '0';
@@ -251,34 +264,71 @@ class _OutletOrdersTabState extends State<OutletOrdersTab> {
           ),
         ],
       ),
-      child: Row(
+      child: Column(
         children: [
-          Expanded(
-            child: _buildStatItem(totalOrders, 'Total', Colors.blue),
+          // Header with title and refresh button
+          Row(
+            children: [
+              const Text(
+                'Order Overview',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              const Spacer(),
+              if (_isRefreshing)
+                const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              else
+                IconButton(
+                  onPressed: _refreshData,
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.blueGrey[50],
+                    foregroundColor: Colors.blueGrey[600],
+                    padding: const EdgeInsets.all(8),
+                  ),
+                  icon: const Icon(Icons.refresh, size: 20),
+                  tooltip: 'Refresh Orders',
+                ),
+            ],
           ),
-          Container(
-            width: 1,
-            height: 40,
-            color: Colors.grey[300],
-          ),
-          Expanded(
-            child: _buildStatItem(placedOrders, 'Placed', Colors.blueGrey[600]!),
-          ),
-          Container(
-            width: 1,
-            height: 40,
-            color: Colors.grey[300],
-          ),
-          Expanded(
-            child: _buildStatItem(transitOrders, 'Transit', Colors.green),
-          ),
-          Container(
-            width: 1,
-            height: 40,
-            color: Colors.grey[300],
-          ),
-          Expanded(
-            child: _buildStatItem(deliveredOrders, 'Delivered', Colors.grey),
+          const SizedBox(height: 16),
+          // Stats row
+          Row(
+            children: [
+              Expanded(
+                child: _buildStatItem(totalOrders, 'Total', Colors.blue),
+              ),
+              Container(
+                width: 1,
+                height: 40,
+                color: Colors.grey[300],
+              ),
+              Expanded(
+                child: _buildStatItem(placedOrders, 'Placed', Colors.blueGrey[600]!),
+              ),
+              Container(
+                width: 1,
+                height: 40,
+                color: Colors.grey[300],
+              ),
+              Expanded(
+                child: _buildStatItem(transitOrders, 'Transit', Colors.green),
+              ),
+              Container(
+                width: 1,
+                height: 40,
+                color: Colors.grey[300],
+              ),
+              Expanded(
+                child: _buildStatItem(deliveredOrders, 'Delivered', Colors.grey),
+              ),
+            ],
           ),
         ],
       ),
